@@ -16,12 +16,14 @@ class Utility:
 
 # Utility calculate_utility(p, w_emax, h_emax, w_s_emax, h_s_emax, kids, wage_h, wage_w, choose_partner, M, wife, husband, t, BP, single_men)
 def calculate_utility(w_emax, h_emax, w_s_emax, h_s_emax, kids, wage_h, wage_w, choose_partner, M, wife, husband, t, BP, single_men):
-  if single_men == 1:
+  if single_men:
     T_END = husband.T_END
     age_index = husband.age_index
   else:
     T_END = wife.T_END
     age_index = wife.age_index
+  print("****************" + str(t))
+  print("****************" + str(T_END))
   assert t <= T_END
   net = gross_to_net(kids, wage_w, wage_h, t, age_index)
   result = Utility()

@@ -9,14 +9,13 @@ husbands3 = np.loadtxt("husbands_3.out")
 husbands4 = np.loadtxt("husbands_4.out")
 husbands5 = np.loadtxt("husbands_5.out")
 
-
 class Husband:
   def __init__(self):
-    self.H_HSD = 0
-    self.H_HSG = 0
-    self.H_SC = 0
-    self.H_CG = 0
-    self.H_PC = 0
+    self.HSD = 0
+    self.HSG = 0
+    self.SC = 0
+    self.CG = 0
+    self.PC = 0
     self.HS = 0   # husband schooling, can get values of 0-4
     self.HE = 0    # husband experience
     self.ability_h_value = 0.0
@@ -46,7 +45,6 @@ def update_school_and_age(school_group, t, husband):   # used only for calculati
     return False
   return True
 
-
 def update_school_and_age_f(wife, husband):     # used only for forward solution - when wife draw a partner
   husband.AGE = wife.AGE
   husband.age_index = wife.age_index         # AGE_INDEX_VALUES = [0, 0, 2, 4, 7]
@@ -57,38 +55,37 @@ def update_school_and_age_f(wife, husband):     # used only for forward solution
     husband.HE = 0  # if husband is still at school, experience would be zero
   update_school(husband)
 
-
 def update_school(husband):         # this function update education in Husnabds structures
   if husband.HS == 0:
-    husband.H_HSD = 1
-    husband.H_HSG = 0
-    husband.H_SC = 0
-    husband.H_CG = 0
-    husband.H_PC = 0
+    husband.HSD = 1
+    husband.HSG = 0
+    husband.SC = 0
+    husband.CG = 0
+    husband.PC = 0
   elif husband.HS == 1:
-    husband.H_HSG = 1
-    husband.H_HSD = 0
-    husband.H_SC = 0
-    husband.H_CG = 0
-    husband.H_PC = 0
+    husband.HSG = 1
+    husband.HSD = 0
+    husband.SC = 0
+    husband.CG = 0
+    husband.PC = 0
   elif husband.HS == 2:
-    husband.H_SC = 1
-    husband.H_HSG = 0
-    husband.H_HSD = 0
-    husband.H_CG = 0
-    husband.H_PC = 0
+    husband.SC = 1
+    husband.HSG = 0
+    husband.HSD = 0
+    husband.CG = 0
+    husband.PC = 0
   elif husband.HS == 3:
-    husband.H_CG = 1
-    husband.H_HSG = 0
-    husband.H_HSD = 0
-    husband.H_SC = 0
-    husband.H_PC = 0
+    husband.CG = 1
+    husband.HSG = 0
+    husband.HSD = 0
+    husband.SC = 0
+    husband.PC = 0
   elif husband.HS == 4:
-    husband.H_PC = 1
-    husband.H_HSG = 0
-    husband.H_HSD = 0
-    husband.H_SC = 0
-    husband.H_CG = 0
+    husband.CG = 1
+    husband.HSG = 0
+    husband.HSD = 0
+    husband.SC = 0
+    husband.CG = 0
   else:
     assert False
 
@@ -111,22 +108,20 @@ def draw_husband(t, wife):
   prob = draw_p()
   # find the first index in the husband array that is not less than the probability
   # note: first column of the husband matrix is skipped since it is just an index, hence the: "+1"
-  value = first(husband_arr[2:], condition=lambda x: x >= prob)
-  h_index = husband_arr[2:].index(value)
+  h_index = np.where(husband_arr[2:] >= prob)[0][0]
   # husband schooling is in the range: 0-4
-  result.HS = h_index/5
+  result.HS = int(h_index/5) + 1
+  print(result.HS)
   assert(result.HS in range(1, 6))
-  update_school_and_age(result, wife)
+  update_school_and_age(result.HS, t, result)
 #  result.HE = h_index % 5 if husband experience is endogenious - you need to draw his experience here
   return result
 
-
 def print_husband(husband):
   print("Husband")
-  print("Schooling: ", husband.WS)
+  print("Schooling: ", husband.HS)
   print("Schooling Map: ", husband.HSD, " ", husband.HSG, " ", husband.SC, " ", husband.CG, " ", husband.PC)
-  print("Experience: ", husband.WE)
-  print("Ability: (", husband.ability_wi, ", ", husband.ability_w_value, ")")
-  print("Match Quality: (", husband.Q_INDEX, ", ", husband.Q, ")")
+  print("Experience: ", husband.HE)
+  print("Ability: (", husband.ability_hi, ",", husband.ability_h_value, ")")
   print("Age: ", husband.AGE)
   print("Last Period: ", husband.T_END)
