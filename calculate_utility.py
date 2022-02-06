@@ -4,8 +4,6 @@ from value_to_index import exp_to_index
 from value_to_index import bp_to_index
 from gross_to_net import gross_to_net
 import constant_parameters as c
-ln = np.log
-
 
 class Utility:
   def __init__(self):
@@ -51,7 +49,7 @@ def calculate_utility(w_emax, h_emax, w_s_emax, h_s_emax, kids, wage_h, wage_w, 
       women_cons_m2 = CS*total_cons2          # women private consumption when married and employed
       men_cons_m1 = (1.0-CS)*total_cons1    # men private consumption when married and women unemployed
       men_cons_m2 = (1.0-CS)*total_cons2    # men private consumption when married and women employed
-      UC_W1 = pow(women_cons_m1, p.alpha)/p.alpha + p.alpha1_w_m*kids + wife.Q + wife.similar_educ + p.alpha2_w*ln(kids) + p.alpha3_w
+      UC_W1 = pow(women_cons_m1, p.alpha)/p.alpha + p.alpha1_w_m*kids + wife.Q + wife.similar_educ + p.alpha2_w*np.log1p(kids) + p.alpha3_w
       UC_W2 = pow(women_cons_m2, p.alpha)/p.alpha + p.alpha1_w_m*kids + wife.Q + wife.similar_educ
       UC_H1 = pow(men_cons_m1, p.alpha)/p.alpha + p.alpha1_h_m*kids + wife.Q + wife.similar_educ
       UC_H2 = pow(men_cons_m2, p.alpha)/p.alpha + p.alpha1_h_m*kids + wife.Q + wife.similar_educ
@@ -89,7 +87,7 @@ def calculate_utility(w_emax, h_emax, w_s_emax, h_s_emax, kids, wage_h, wage_w, 
           result.husband[c.CS_SIZE+i] = UC_H2  # +beta0*h_emax[t+1][exp_wi][kids][EMP][wife.ability_wi][husband.ability_hi][husband.HS][wife.WS][wife.Q_INDEX][BPi]
   UNEMP = 0
   EMP = 1
-  UC_W_S_UNEMP = p.alpha1_w_s*kids + p.alpha2_w*ln(kids) + p.alpha3_w
+  UC_W_S_UNEMP = p.alpha1_w_s*kids + p.alpha2_w*np.log1p(kids) + p.alpha3_w
   if wage_w > 0:
     women_cons_s2 = net.net_income_s_w/(1.0+kids*0.3)    # women private consumption when single and employed
     UC_W_S_EMP = pow(women_cons_s2, p.alpha)/p.alpha + p.alpha1_w_s*kids

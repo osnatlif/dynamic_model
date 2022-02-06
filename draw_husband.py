@@ -131,10 +131,9 @@ def draw_husband(t, wife, forward):
 
 def print_husband(husband):
   print("Husband")
-  print("Schooling: ", husband.WS)
-  print("Schooling Map: ", husband.HSD, " ", husband.HSG, " ", husband.SC, " ", husband.CG, " ", husband.PC)
-  print("Experience: ", husband.WE)
-  print("Ability: (", husband.ability_wi, ", ", husband.ability_w_value, ")")
-  print("Match Quality: (", husband.Q_INDEX, ", ", husband.Q, ")")
+  print("Schooling: ", husband.HS)
+  print("Schooling Map: ", husband.H_HSD, " ", husband.H_HSG, " ", husband.H_SC, " ", husband.H_CG, " ", husband.H_PC)
+  print("Experience: ", husband.HE)
+  print("Ability: (", husband.ability_hi, ", ", husband.ability_h_value, ")")
   print("Age: ", husband.AGE)
   print("Last Period: ", husband.T_END)

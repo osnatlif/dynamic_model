@@ -17,7 +17,7 @@ def nash(utility):
       nash_value[i] = (utility.wife[i]-outside_option_w_v)**0.5 * (utility.husband[i]-outside_option_h_v)**0.5
 
   max_nash_value = max(nash_value)
-  max_nash_value_index = np.where(max_nash_value == nash_value)
+  max_nash_value_index = np.ravel(np.where(max_nash_value == nash_value))
 
   if max_nash_value == c.MINIMUM_UTILITY:
     return c.NO_BP

@@ -18,7 +18,7 @@ def single_men(school_group, t, w_emax, h_emax, w_s_emax, h_s_emax, adjust_bp, v
   base_husband = draw_husband.Husband()              # create a husband structure (and draw ability, in backward we redefine the ability in the loop
   draw_husband.update_school_and_age(school_group, t, base_husband)     # update his schooling according to his school_group
   iter_count = 0
-  for ability_i in range(1, 4):                           # doe each ability level - open loop of ability
+  for ability_i in range(0, c.ABILITY_SIZE):                           # doe each ability level - open loop of ability
     base_husband.ability_hi = ability_i
     base_husband.ability_h_value = c.normal_arr[ability_i] * p.sigma3      # husband ability - low, medium, high
     sum = 0.0
@@ -54,16 +54,16 @@ def single_men(school_group, t, w_emax, h_emax, w_s_emax, h_s_emax, adjust_bp, v
         # marriage decision
         decision = marriage_emp_decision.marriage_emp_decision(utility, bp, wife, husband, adjust_bp)
         if decision.M == c.MARRIED:
-          sum += utility.U_H[decision.max_weighted_utility_index]
+          sum += utility.husband[decision.max_weighted_utility_index]
           if verbose:
             print("got married")
         else:
           sum += decision.outside_option_h_v
-          assert(decision.outside_option_h_v == utility.U_H_S)
+          assert(decision.outside_option_h_v == utility.husband_s)
           if verbose:
             print("did not get married")
       else:
-        sum += utility.U_H_S
+        sum += utility.husband_s
         if verbose:
           print("did not get marriage offer")
       if verbose:
