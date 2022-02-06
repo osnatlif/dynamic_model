@@ -5,7 +5,7 @@ from test_calculate_utility import draw_random_utility
 
 
 class TestNash(TestCase):
-    def test_marriage_emp_decision(self):
+    def test_nash(self):
         _, _, utility = draw_random_utility()
         result = nash.nash(utility)
         print(result)

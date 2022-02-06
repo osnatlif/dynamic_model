@@ -15,7 +15,8 @@ def married_couple(WS, t, w_emax, h_emax, w_s_emax, h_s_emax, adjust_bp, verbose
 		print("====================== married couple: ", WS, ", ", t, " ======================")
 	base_wife = draw_wife.Wife()
 	base_husband = draw_husband.Husband()
-	draw_wife.update_wife_schooling(WS, t, base_wife)  # update her schooling according to her school_group
+	if draw_wife.update_wife_schooling(WS, t, base_wife) == False:  # update her schooling according to her school_group
+		return 0
 	iter_count = 0
 	for w_exp_i in range(0, c.EXP_SIZE):  # for each experience level: 5 levels - open loop of experience
 		base_wife.WE = c.exp_vector[w_exp_i]
@@ -32,7 +33,7 @@ def married_couple(WS, t, w_emax, h_emax, w_s_emax, h_s_emax, adjust_bp, verbose
 							if draw_husband.update_school_and_age(HS, t, base_husband) == False:
 								if verbose:
 									print("skipping husband")
-									draw_husband.print_husband(base_husband)
+									print(base_husband)
 									print( "================" )
 								continue
 							if HS == WS:
@@ -55,7 +56,7 @@ def married_couple(WS, t, w_emax, h_emax, w_s_emax, h_s_emax, adjust_bp, verbose
 																										CHOOSE_PARTNER, c.MARRIED, wife, husband, t, bp, single_men)
 										if verbose:
 											draw_wife.print_wife(wife)
-											draw_husband.print_husband(husband)
+											print(husband)
 										# marriage decision - outside option value wife
 										decision = marriage_emp_decision.marriage_emp_decision(utility, bp, wife, husband, adjust_bp)
 										if decision.M == c.MARRIED:
@@ -76,6 +77,7 @@ def married_couple(WS, t, w_emax, h_emax, w_s_emax, h_s_emax, adjust_bp, verbose
 										print("emax() = ", w_sum/c.DRAW_B, ", ", h_sum/c.DRAW_B)
 										print("======================================================")
 									iter_count = iter_count + 1
+
 	return iter_count
 
 

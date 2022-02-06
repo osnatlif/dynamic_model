@@ -25,6 +25,11 @@ class Husband:
     self.age_index = 0
     self.T_END = 0
 
+  def __str__(self):
+    return "Husband\n\tSchooling: " + str(self.HS) + "\n\tSchooling Map: " + str(self.H_HSD)+","+str(self.H_HSG)+","+str(self.H_SC)+","+str(self.H_CG)+","+str(self.H_PC) + \
+                                     "\n\tExperience: " + str(self.HE) + "\n\tAbility: " + str(self.ability_hi)+","+str(self.ability_h_value) + \
+                                     "\n\tAge: " + str(self.AGE) + "\n\tAge Index: " + str(self.age_index) + "\n\tLast Period: " + str(self.T_END)
+
 
 def first(iterable, condition=lambda x: True):
   # Returns the first item in the `iterable` that satisfies the `condition`
@@ -127,13 +132,3 @@ def draw_husband(t, wife, forward):
     update_school_and_age(result.HS, t, result)
 
   return result
-
-
-def print_husband(husband):
-  print("Husband")
-  print("Schooling: ", husband.HS)
-  print("Schooling Map: ", husband.H_HSD, " ", husband.H_HSG, " ", husband.H_SC, " ", husband.H_CG, " ", husband.H_PC)
-  print("Experience: ", husband.HE)
-  print("Ability: (", husband.ability_hi, ", ", husband.ability_h_value, ")")
-  print("Age: ", husband.AGE)
-  print("Last Period: ", husband.T_END)

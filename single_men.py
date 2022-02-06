@@ -1,4 +1,5 @@
 import math
+import copy
 import parameters as p
 import constant_parameters as c
 from random_pool import epsilon
@@ -13,20 +14,21 @@ import nash
 
 def single_men(school_group, t, w_emax, h_emax, w_s_emax, h_s_emax, adjust_bp, verbose):
   if verbose:
-    print("====================== single men: ", school_group, ",  ======================")
-  
+    print("====================== single men: ", school_group, t, "  ======================")
+
   base_husband = draw_husband.Husband()              # create a husband structure (and draw ability, in backward we redefine the ability in the loop
-  draw_husband.update_school_and_age(school_group, t, base_husband)     # update his schooling according to his school_group
+  if draw_husband.update_school_and_age(school_group, t, base_husband) == False:     # update his schooling according to his school_group
+    return 0
   iter_count = 0
   for ability_i in range(0, c.ABILITY_SIZE):                           # doe each ability level - open loop of ability
     base_husband.ability_hi = ability_i
     base_husband.ability_h_value = c.normal_arr[ability_i] * p.sigma3      # husband ability - low, medium, high
     sum = 0.0
     if verbose:
-      draw_husband.print_husband(base_husband)
+      print(base_husband)
 
     for draw in range(0, c.DRAW_B):
-      husband = base_husband
+      husband = copy.deepcopy(base_husband)
       wage_h = calculate_wage.calculate_wage_h(husband, epsilon())
       # probabilty of meeting a potential wife
       p_wife = math.exp(p.p0_h+p.p1_h*(husband.AGE+t)+p.p2_h*(husband.AGE+t)**2)/(1.0+math.exp(p.p0_h+p.p1_h*(husband.AGE+t)+p.p2_h*(husband.AGE+t)**2))
@@ -36,7 +38,6 @@ def single_men(school_group, t, w_emax, h_emax, w_s_emax, h_s_emax, adjust_bp, v
       if draw_p() < p_wife:
         CHOOSE_WIFE = 1
         wife = draw_wife.draw_wife(t, husband.age_index, school_group)
-        draw_wife.update_wife_schooling(wife.WS, t, wife)
         wage_w = calculate_wage.calculate_wage_w(wife, draw_p(), epsilon())
 
       bp = c.INITIAL_BP

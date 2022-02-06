@@ -20,16 +20,16 @@ import married_couple
 def calculate_emax(w_m_emax, h_m_emax, w_s_emax, h_s_emax, adjust_bp, verbose): 
   iter_count = 0
   # running until the one before last period
-  for t in range(c.T_MAX - 2, 0):
+  for t in range(c.T_MAX - 2, 0, -1):
     # EMAX FOR SINGLE MEN
-    for HS in range(0, 5):          # SCHOOL_H_VALUES
-      iter_count += single_men(p, HS, t, w_m_emax, h_m_emax, w_s_emax, h_s_emax, adjust_bp, verbose)
+    for HS in range(0, c.SCHOOL_SIZE):          # SCHOOL_H_VALUES
+      iter_count += single_men.single_men(HS, t, w_m_emax, h_m_emax, w_s_emax, h_s_emax, adjust_bp, verbose)
     # EMAX FOR SINGLE WOMEN
-    for WS in range(1, 5):          # SCHOOL_W_VALUES
-      iter_count += single_women(p, WS, t, w_m_emax, h_m_emax, w_s_emax, h_s_emax, adjust_bp, verbose)
+    for WS in range(1, c.SCHOOL_SIZE):          # SCHOOL_W_VALUES
+      iter_count += single_women.single_women(WS, t, w_m_emax, h_m_emax, w_s_emax, h_s_emax, adjust_bp, verbose)
     # EMAX FOR MARRIED COUPLE
-    for WS in range(1, 5):          # SCHOOL_W_VALUES
-      iter_count += married_couple(p, WS, t, w_m_emax, h_m_emax, w_s_emax, h_s_emax, adjust_bp, verbose)
+    for WS in range(1, c.SCHOOL_SIZE):          # SCHOOL_W_VALUES
+      iter_count += married_couple.married_couple(WS, t, w_m_emax, h_m_emax, w_s_emax, h_s_emax, adjust_bp, verbose)
   return iter_count
 
 

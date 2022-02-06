@@ -1,4 +1,5 @@
 import math
+import copy
 from random_pool import epsilon
 from random_pool import draw_p
 import parameters as p
@@ -13,9 +14,10 @@ import marriage_emp_decision
 
 def single_women(school_group, t, w_m_emax, h_m_emax, w_s_emax, h_s_emax, adjust_bp, verbose):
     if verbose:
-        print("====================== single women: ",  school_group, ", ", " ======================")
+        print("====================== single women: ", school_group, t, " ======================")
     base_wife = draw_wife.Wife()  # create a wife structure (and draw ability, in backward we redefine the ability in the loop
-    draw_wife.update_wife_schooling(school_group, t, base_wife)  # update her schooling according to her school_group
+    if draw_wife.update_wife_schooling(school_group, t, base_wife) == False:  # update her schooling according to her school_group
+        return 0
     iter_count = 0
     for w_exp_i in range(0, c.EXP_SIZE):   # for each experience level: 5 levels - open loop of experience
         base_wife.WE = c.exp_vector[w_exp_i]
@@ -29,7 +31,7 @@ def single_women(school_group, t, w_m_emax, h_m_emax, w_s_emax, h_s_emax, adjust
                     if verbose:
                         draw_wife.print_wife(base_wife)
                     for draw in range(0, c.DRAW_B):
-                        wife = base_wife
+                        wife = copy.deepcopy(base_wife)
                         husband = draw_husband.Husband()
                         wage_w = calculate_wage.calculate_wage_w(wife, draw_p(), epsilon())
                         # probabilty of meeting a potential husband

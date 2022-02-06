@@ -1,5 +1,5 @@
 # number of draws backward
-DRAW_B = 30   # DRAWS
+DRAW_B = 1   # DRAWS
 DRAW_F = 5000
 
 NO_KIDS = 0
