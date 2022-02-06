@@ -2,7 +2,6 @@ import numpy as np
 import constant_parameters as c
 ded_and_ex = np.loadtxt("deductions_exemptions.out")
 tax_brackets = np.loadtxt("tax_brackets.out")
-print(ded_and_ex)
 
 
 class NetIncome:
@@ -12,19 +11,25 @@ class NetIncome:
     self.net_income_m = 0
     self.net_income_m_unemp = 0
 
+  def __str__(self):
+    return "Net Income:\n\tSingle Husband: " + str(self.net_income_s_h) + \
+           "\n\tSingle Wife: " + str(self.net_income_s_w) + \
+           "\n\tMarried: " + str(self.net_income_m) + \
+           "\n\tMarried Unemployed: " + str(self.net_income_m_unemp)
+
 
 # tax matrix
-# -----+-------------------+----------------------------------------------------------------------------------------------------+----------
-#      | single                                                                                                                  | married
-# -----+-----------------------------------------+------------------------------------------------------------------------------+----------
+# -----+--------------------------------------------------------------------------------------------------------------------------------------------------+---------
+#      | single                                                                                                                                           | married
+# -----+-----------------------------------------+--------------------------------------------------------------------------------------------------------+---------
 # year | br1 | br2 | br3 | br4 | br5 | br6 | br7 | br8 | br9 | br10 | br11 | %br1 | %br2 | %br3 | %br4 | %br5 | %br6 | %br7 | %br8 | %br9 | %br10 | %br11 | ...
-# -----+-----------------------------------+------------------------------------------------------------------------------+----------
+# -----+--------------------------------------------------------------------------------------------------------------------------------------------------+---------
 
 TAX_PERCENT_OFFSET = 11
 
 # deduction matrix
-# -----+---------------------------------------------------+--------------------------------------------+--------------------------------------------+--------
-#      |                                                       | 0 kids                                     | 1 kid                                      | 2 kids
+# -----+-------------------------------------------------------------+--------------------------------------------+--------------------------------------------+--------
+#      |                                                             | 0 kids                                     | 1 kid                                      | 2 kids
 # -----+-------------------------------------------------------------+--------------------------------------------+--------------------------------------------+--------
 # year | ded married | ded single | ex married | ex single | ex kids | int1% | int1 | int2% | int3% | int2 | int3 | int1% | int1 | int2% | int3% | int2 | int3 | ...
 # -----+-------------------------------------------------------------+--------------------------------------------+--------------------------------------------+--------
@@ -99,12 +104,12 @@ def gross_to_net(kids, wage_w, wage_h, t, age_index):
   deductions_m = ded_and_ex[row_number][1]
   deductions_s = ded_and_ex[row_number][2]
   exemptions_m = ded_and_ex[row_number][3] + ded_and_ex[row_number][5] * kids
-  exemptions_s_w = ded_and_ex[row_number][4] + ded_and_ex[row_number][5]*kids
+  exemptions_s_w = ded_and_ex[row_number][4] + ded_and_ex[row_number][5] * kids
   exemptions_s_h = ded_and_ex[row_number][4]
 
   result = NetIncome()
 
-# CALCULATE NET INCOME FOR SINGLE WOMEN
+  # CALCULATE NET INCOME FOR SINGLE WOMEN
   result.net_income_s_w = gross_to_net_single(row_number, kids, wage_w, exemptions_s_w, deductions_s)
 
   # CALCULATE NET INCOME FOR SINGLE MEN
@@ -115,3 +120,4 @@ def gross_to_net(kids, wage_w, wage_h, t, age_index):
   result.net_income_m_unemp = gross_to_net_married(row_number, kids, wage_h, 0, exemptions_m, deductions_m)
 
   return result
+
