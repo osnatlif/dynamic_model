@@ -3,6 +3,7 @@ import math
 from statistics import NormalDist
 from random_pool import epsilon
 from random_pool import draw_p
+from random_pool import draw_3
 import parameters as p
 import constant_parameters as c
 import draw_husband
@@ -11,6 +12,9 @@ import calculate_wage
 import calculate_utility
 import nash
 import marriage_emp_decision
+import single_men
+import single_women
+import married_couple
 
 
 def calculate_emax(w_m_emax, h_m_emax, w_s_emax, h_s_emax, adjust_bp, verbose): 
@@ -44,69 +48,68 @@ def mean(val_arr, count_arr, school_group):
 
 
 def calculate_moments(m, w_m_emax, h_m_emax, w_s_emax, h_s_emax, adjust_bp, verbose):
-#  EstimatedMoments estimated
-#  boost::math::normal normal_dist
-#  SchoolingMatrix emp_total = {{{0}}}    # employment
-#  SchoolingMatrix count_emp_total{{{0}}}
-#  SchoolingMatrix emp_m{{{0}}}           # employment married
-#  SchoolingMatrix emp_um{{{0}}}          # employment unmarried
-#  SchoolingMeanArray emp_m_up            # employment unmarried up
-#  SchoolingMeanArray emp_m_down          # employment unmarried down
-#  SchoolingMeanArray emp_m_eq            # employment unmarried equal
-  M_KIDS_SIZE = 5 # no kids, 1 kids, 2 kids, 3 kids 4+kids
-  UM_KIDS_SIZE = 2 # no kids, with kids
+  bp_initial_dist = np.zeros(10)
+  bp_dist = np.zeros(10)
+  cs_dist = np.zeros(10)
+  emp_total = np.zeros(c.T_max, 4)    # employment
+  count_emp_total= np.zeros(c.T_max, 4)
+  emp_m = np.zeros(c.T_max, 4)        # employment married
+  emp_um = np.zeros(c.T_max, 4)       # employment unmarried
+  emp_m_up = np.zeros(4)             # employment unmarried up
+  emp_m_down = np.zeros(4)           # employment unmarried down
+  emp_m_eq = np.zeros(4)             # employment unmarried equal
+  M_KIDS_SIZE = 5    # no kids, 1 kids, 2 kids, 3 kids 4+kids
+  UM_KIDS_SIZE = 2   # no kids, with kids
 #  SchoolingMeanArray emp_m_kids[M_KIDS_SIZE]     # employment married no kids
 #  SchoolingMeanArray emp_um_kids[UM_KIDS_SIZE]   # employment unmarried and no children
-#  SchoolingMatrix divorce{{{0}}}
-#  SchoolingArray just_found_job_m{0}         # transition matrix - unemployment to employment (married)
-#  SchoolingArray just_got_fired_m{0}         # transition matrix - employment to unemployment (married)
-#  SchoolingArray just_found_job_um{0}        # transition matrix - unemployment to employment (unmarried)
-#  SchoolingArray just_got_fired_um{0}        # transition matrix - employment to unemployment (unmarried)
-#  SchoolingArray just_found_job_mc{0}        # transition matrix - unemployment to employment (married+kids)
-#  SchoolingArray just_got_fired_mc{0}        # transition matrix - employment to unemployment (married+kids)
-#  SchoolingArray count_just_got_fired_m{0}
-#  SchoolingArray count_just_found_job_m{0}
-#  SchoolingArray count_just_got_fired_um{0}
-#  SchoolingArray count_just_found_job_um{0}
-#  SchoolingArray count_just_got_fired_mc{0}
-#  SchoolingArray count_just_found_job_mc{0}
-#  SchoolingMeanMatrix wages_m_h
-  # married men wages - 0 until 20+27 years of exp - 36-47 will be ignore in moments  
-#  SchoolingMeanMatrix wages_w        # women wages if employed
-#  SchoolingMeanArray wages_m_w_up    # married up women wages if employed
-#  SchoolingMeanArray wages_m_w_down  # married down women wages if employed
-#  SchoolingMeanArray wages_m_w_eq    # married equal women wages if employed
-#  SchoolingMeanArray wages_um_w      # unmarried women wages if employed
-#  SchoolingMatrix married{{{0}}}     # fertility and marriage rate moments   % married yes/no
-#  SchoolingArray just_married{{0}}   # for transition matrix from single to married
-#  SchoolingArray just_divorced{{0}}  # for transition matrix from married to divorce
-#  SchoolingMeanArray age_at_first_marriage # age at first marriage
-#  SchoolingMeanMatrix newborn_um      # new born in period t - for probability and distribution
-#  SchoolingMeanMatrix newborn_m       # new born in period t - for probability and distribution
-#  SchoolingMeanMatrix newborn_all       # new born in period t - for probability and distribution
-#  SchoolingMeanArray duration_of_first_marriage # duration of marriage if divorce or 45-age of marriage if still married at 45.
-  # husband education by wife education
-#  UMatrix<SCHOOL_LEN, SCHOOL_LEN> assortative_mating_hist{{{0}}}
-#  SchoolingArray assortative_mating_count{0}
-#  SchoolingArray count_just_married{{0}}
-#  SchoolingArray count_just_divorced{{0}}
-#  SchoolingMeanArray n_kids_arr    # # of children by school group
+  divorce = np.zeros(c.T_max, 4)
+  just_found_job_m = np.zeros(4)          # transition matrix - unemployment to employment (married)
+  just_got_fired_m = np.zeros(4)          # transition matrix - employment to unemployment (married)
+  just_found_job_um = np.zeros(4)          # transition matrix - unemployment to employment (unmarried)
+  just_found_job_mc = np.zeros(4)        # transition matrix - unemployment to employment (married+kids)
+  just_got_fired_um = np.zeros(4)        # transition matrix - unemployment to employment (married+kids)
+  just_got_fired_mc = np.zeros(4)          # transition matrix - employment to unemployment (married+kids)
+  count_just_got_fired_m = np.zeros(4)
+  count_just_found_job_m = np.zeros(4)
+  count_just_got_fired_um = np.zeros(4)
+  count_just_found_job_um = np.zeros(4)
+  count_just_got_fired_mc = np.zeros(4)
+  count_just_found_job_mc = np.zeros(4)
+  wages_m_h  = np.zeros(c.T_MAX, 5)   # married men wages - 0 until 20+27 years of exp - 36-47 will be ignore in moments
+  wages_w  = np.zeros(c.T_MAX, 4)         # women wages if employed
+  wages_m_w_up = np.zeros(4)      # married up women wages if employed
+  wages_m_w_down = np.zeros(4)    # married down women wages if employed
+  wages_m_w_eq = np.zeros(4)      # married equal women wages if employed
+  wages_um_w = np.zeros(4)        # unmarried women wages if employed
+  married = np.zers(c.T_MAX, 4)     # fertility and marriage rate moments   % married yes/no
+  just_married = np.zeros(4)     # for transition matrix from single to married
+  just_divorced = np.zeros(4)    # for transition matrix from married to divorce
+  age_at_first_marriage = np.zeros(4)   # age at first marriage
+  newborn_um = np.zeros(4)       # new born in period t - for probability and distribution
+  newborn_m = np.zeros(4)        # new born in period t - for probability and distribution
+  newborn_all = np.zeros(4)        # new born in period t - for probability and distribution
+  duration_of_first_marriage = np.zeros(4)   # duration of marriage if divorce or 45-age of marriage if still married at 45.
+
+  assortative_mating_hist  = np.zeros(5, 5)    # husband education by wife education
+  assortative_mating_count = np.zeros(4)
+  count_just_married = np.zeros(4)
+  count_just_divorced = np.zeros(4)
+  n_kids_arr  = np.zeros(4)   # # of children by school group
 
   # school_group 0 is only for calculating the emax if single men - not used here
   for school_group in range(1, 5):       # SCHOOL_W_VALUES
     for draw_f in range(0, c.DRAW_F):   # start the forward loop
       IGNORE_T = 0
       husband = draw_husband.Husband()  # declare husband structure
-      wife = draw_wide.Wife()           # declare wife structure
+      wife = draw_wife.Wife()           # declare wife structure
       wife.ability_wi = draw_3()        # draw wife's ability
-      wife.ability_w_value = c.normal_arr[result.ability_wi] * p.sigma3
-      update_wife_schooling(school_group, IGNORE_T, wife)
+      wife.ability_w_value = c.normal_arr[wife.ability_wi] * p.sigma3
       if draw_f > c.DRAW_F*c.UNEMP_WOMEN_RATIO:   #update previous employment status according to proportion in population
         wife.emp_state = 1
       else:
         wife.emp_state = 1
       # kid age array maximum number of kids = 4 -  0 - oldest kid ... 3 - youngest kid
-      MAX_NUM_KIDS = KIDS_LEN - 1
+      MAX_NUM_KIDS = c.KIDS_LEN - 1
       kid_age = np.zeros(MAX_NUM_KIDS)
       DIVORCE = 0
       n_kids = 0
@@ -114,9 +117,9 @@ def calculate_moments(m, w_m_emax, h_m_emax, w_s_emax, h_s_emax, adjust_bp, verb
       n_kids_um = 0
       duration = 0
       Q_minus_1 = 0.0
-      bp = INITIAL_BP
-      update_ability(p, draw_3(), wife)
-      decision = MarriageEmpDecision.MarriageEmpDecision()
+      bp = c.INITIAL_BP
+      draw_wife.update_ability(p, draw_3(), wife)
+      decision = marriage_emp_decision.MarriageEmpDecision()
 
       # following 2 indicators are used to count age at first marriage
       # and marriage duration only once per draw
@@ -142,32 +145,32 @@ def calculate_moments(m, w_m_emax, h_m_emax, w_s_emax, h_s_emax, adjust_bp, verb
           duration = 0
           wife.Q = 0.0
           # probability of meeting a potential husband
-          choose_hudband_p = (exp(p.p0_w+p.p1_w*(wife.AGE)+p.p2_w*pow(wife.AGE,2))/
-            (1.0+exp(p.p0_w+p.p1_w*(wife.AGE)+p.p2_w*pow(wife.AGE,2))))
+          choose_hudband_p = (math.exp(p.p0_w+p.p1_w*(wife.AGE)+p.p2_w*pow(wife.AGE,2))/
+            (1.0+math.exp(p.p0_w+p.p1_w*(wife.AGE)+p.p2_w*pow(wife.AGE,2))))
           if draw_p() < choose_hudband_p:
             choose_husband = True
             husband = draw_husband( t, wife)
             wife.Q_INDEX = draw_3()  # draw wife's
-            wife.Q = c.normal_arr[result.Q_INDEX] * p.sigma4
-            draw_husband.update_school_and_age_f(wife,husband)
+            wife.Q = c.normal_arr[wife.Q_INDEX] * p.sigma4
+            draw_husband.update_school_and_age_f(wife, husband)
             assert(husband.AGE == wife.AGE)
             if verbose:
               print("new potential husband")
 
         # potential or current husband wage
           if decision.M == c.MARRIED or choose_husband:
-            wage_h = calculate_wage_h(p, husband, epsilon())
+            wage_h = calculate_wage.calculate_wage_h(p, husband, epsilon())
           else:
             wage_h = 0.0
-          wage_w = calculate_wage_w(p, wife, draw_p(), epsilon())
+          wage_w = calculate_wage.calculate_wage_w(p, wife, draw_p(), epsilon())
           is_single_men = False
-          if decision.M == UNMARRIED and choose_husband:          # not married, but has potential husband - calculate initial BP
+          if decision.M == c.UNMARRIED and choose_husband:          # not married, but has potential husband - calculate initial BP
             utility = calculate_utility(p, w_m_emax, h_m_emax, w_s_emax, h_s_emax, n_kids, wage_h, wage_w,
               True, decision.M, wife, husband, t, bp, is_single_men)
             # Nash bargaining at first period of marriage
             bp = nash.nash(utility)
           if bp != c.NO_BP:
-            ++estimated.bp_initial_dist[bp*10]
+            ++bp_initial_dist[bp*10]
           else:
             choose_husband = False
 
@@ -175,7 +178,7 @@ def calculate_moments(m, w_m_emax, h_m_emax, w_s_emax, h_s_emax, adjust_bp, verb
           if verbose:
             print("existing husband")
         utility = calculate_utility.Utility()
-        if decision.M == MARRIED or choose_husband:
+        if decision.M == c.MARRIED or choose_husband:
           # at this point the BP is 0.5 if there is no marriage offer
           # BP is calculated by nash above if offer given
           # and is from previous period if already married
@@ -187,8 +190,8 @@ def calculate_moments(m, w_m_emax, h_m_emax, w_s_emax, h_s_emax, adjust_bp, verb
           assert(wage_h == 0.0)
           utility = calculate_utility(p, w_m_emax, h_m_emax, w_s_emax, h_s_emax, n_kids, wage_h, wage_w,
               False, decision.M, wife, husband, t, bp, is_single_men)
-          wife.emp_state = wife_emp_decision.wife_emp_decision(utility)
-        assert(t+wife.age_index < T_MAX)
+          wife.emp_state = draw_wife.wife_emp_decision(utility)
+        assert(t+wife.age_index < c.T_MAX)
         emp_total[t+wife.age_index][school_group] += wife.emp_state
         if decision.M == c.MARRIED:
           emp_m[t+wife.age_index][school_group] += wife.emp_state
@@ -196,9 +199,9 @@ def calculate_moments(m, w_m_emax, h_m_emax, w_s_emax, h_s_emax, adjust_bp, verb
           emp_um[t+wife.age_index][school_group] += wife.emp_state
         ++count_emp_total[t+wife.age_index][school_group]
         if bp != c.NO_BP:
-          ++estimated.bp_dist[bp*10]
+          ++bp_dist[bp*10]
         if decision.M == c.MARRIED:
-          ++estimated.cs_dist[decision.max_weighted_utility_index]
+          ++cs_dist[decision.max_weighted_utility_index]
         # FERTILITY EXOGENOUS PROCESS - check for another child + update age of children
         # probability of another child parameters:
         # c1 previous work state - wife
@@ -217,7 +220,7 @@ def calculate_moments(m, w_m_emax, h_m_emax, w_s_emax, h_s_emax, adjust_bp, verb
           p.c4*wife.SC*(wife.AGE) + p.c5*wife.SC*pow(wife.AGE,2) + p.c6*wife.CG*(wife.AGE) + p.c7*wife.CG*pow(wife.AGE,2) +
           p.c8*wife.PC*(wife.AGE) + p.c9*wife.PC*pow(wife.AGE,2) + p.c10*n_kids + p.c11*husband.HS*decision.M + p.c12*decision.M)
         child_prob = NormalDist(mu=0, sigma=1).pdf(c_lamda)
-        if draw_p() < child_prob and wife.AGE < MAX_FERTILITY_AGE:
+        if draw_p() < child_prob and wife.AGE < c.MAX_FERTILITY_AGE:
           new_born = 1
           n_kids = math.min(n_kids+1, MAX_NUM_KIDS)
           if decision.M == c.MARRIED:
@@ -248,13 +251,13 @@ def calculate_moments(m, w_m_emax, h_m_emax, w_s_emax, h_s_emax, adjust_bp, verb
           match_quality_change_prob = draw_p()
           if match_quality_change_prob < p.MATCH_Q_DECREASE and wife.Q_INDEX > 0:
             --wife.Q_INDEX
-            wife.Q = normal_arr[wife.Q_INDEX]*p.sigma_4
+            wife.Q = c.normal_arr[wife.Q_INDEX]*p.sigma_4
           elif (match_quality_change_prob > p.MATCH_Q_DECREASE and
               match_quality_change_prob < p.MATCH_Q_DECREASE + p.MATCH_Q_INCREASE and wife.Q_INDEX < 2):
             ++wife.Q_INDEX
-            wife.Q = normal_arr[wife.Q_INDEX]*p.sigma_4
+            wife.Q = c.normal_arr[wife.Q_INDEX]*p.sigma_4
         if decision.M == c.MARRIED:          # MARRIED WOMEN EMPLOYMENT BY KIDS INDIVIDUAL MOMENTS
-          emp_m_kids[n_kids].accumulate(wife.WS, wife.emp_state) # employment married no kids
+          emp_m_kids[n_kids].accumulate(wife.WS, wife.emp_state)  # employment married no kids
         else:
           # UNMARRIED WOMEN EMPLOYMENT BY KIDS INDIVIDUAL MOMENTS
           if n_kids == 0:
@@ -277,7 +280,7 @@ def calculate_moments(m, w_m_emax, h_m_emax, w_s_emax, h_s_emax, adjust_bp, verb
 
         elif (wife.emp_state == c.UNEMP and prev_emp_state_w == c.EMP):
           # for transition matrix - employment to unemployment
-          if decision.M == MARRIED:
+          if decision.M == c.MARRIED:
             ++just_got_fired_m[wife.WS]
             if n_kids > 0:
               ++just_got_fired_mc[wife.WS]
@@ -312,7 +315,7 @@ def calculate_moments(m, w_m_emax, h_m_emax, w_s_emax, h_s_emax, adjust_bp, verb
           if wife.WS > husband.HS:
             # women married down, men married up
             emp_m_down.accumulate(wife.WS, wife.emp_state)
-            if husband.HE < 37  and wage_h > m.wage_moments[husband.HE][SCHOOL_LEN+husband.HS]:
+            if husband.HE < 37 and wage_h > m.wage_moments[husband.HE][c.SCHOOL_LEN+husband.HS]:
               estimated.up_down_moments.accumulate(emp_m_down_above, wife.WS, wife.emp_state)
             else:
               estimated.up_down_moments.accumulate(emp_m_down_below, wife.WS, wife.emp_state)
