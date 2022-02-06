@@ -83,14 +83,8 @@ def draw_wife(t, age_index, HS):
   assert(result.emp_state == c.EMP or result.emp_state == c.UNEMP)
 
   if result.WS == HS:
-    if HS == 2:
-      result.similar_educ = p.EDUC_MATCH_2
-    elif HS == 3:
-      result.similar_educ = p.EDUC_MATCH_3
-    elif HS == 4:
-      result.similar_educ = p.EDUC_MATCH_4
-    elif HS == 5:
-      result.similar_educ = p.EDUC_MATCH_5
+    result.similar_educ = p.EDUC_MATCH[HS]
+
   return result
 
 
