@@ -15,11 +15,11 @@ def single_women(school_group, t, w_m_emax, h_m_emax, w_s_emax, h_s_emax, adjust
     if verbose:
         print("====================== single women: ",  school_group, ", ", " ======================")
     base_wife = draw_wife.Wife()  # create a wife structure (and draw ability, in backward we redefine the ability in the loop
-    draw_wife.update_wife_schooling(t, base_wife)  # update her schooling according to her school_group
+    draw_wife.update_wife_schooling(school_group, t, base_wife)  # update her schooling according to her school_group
     iter_count = 0
     for w_exp_i in range(0, c.EXP_SIZE):   # for each experience level: 5 levels - open loop of experience
         base_wife.WE = c.exp_vector[w_exp_i]
-        for ability_i in range(1, 4):  # for each ability level: low, medium, high - open loop of ability
+        for ability_i in range(0, c.ABILITY_SIZE):  # for each ability level: low, medium, high - open loop of ability
             base_wife.ability_hi = ability_i
             base_wife.ability_h_value = c.normal_arr[ability_i] * p.sigma3  # wife ability - low, medium, high
             for kids in range(0, 4):      # for each number of kids: 0, 1, 2,  - open loop of kids
@@ -38,8 +38,7 @@ def single_women(school_group, t, w_m_emax, h_m_emax, w_s_emax, h_s_emax, adjust
                         wage_h = 0.0
                         if draw_p() < p_husband:
                             CHOOSE_HUSBAND = 1
-                            husband = draw_husband.draw_husband(t, wife)
-                            draw_husband.update_school_and_age(school_group, t, husband)
+                            husband = draw_husband.draw_husband(t, wife, False)
                             wage_h = calculate_wage.calculate_wage_h(husband, epsilon())
 
                         bp = c.INITIAL_BP
@@ -55,7 +54,7 @@ def single_women(school_group, t, w_m_emax, h_m_emax, w_s_emax, h_s_emax, adjust
                             # marriage decision
                             decision = marriage_emp_decision.marriage_emp_decision(utility, bp, wife, husband, adjust_bp)
                             if decision.M == c.MARRIED:
-                                sum += utility.U_W[decision.max_weighted_utility_index]
+                                sum += utility.wife[decision.max_weighted_utility_index]
                                 if verbose:
                                     print("got married")
                             else:
@@ -63,7 +62,7 @@ def single_women(school_group, t, w_m_emax, h_m_emax, w_s_emax, h_s_emax, adjust
                                 if verbose:
                                     print("did not get married")
                         else:
-                            sum += max(utility.U_W_S[c.UNEMP], utility.U_W_S[c.EMP])
+                            sum += max(utility.wife_s[c.UNEMP], utility.wife_s[c.EMP])
                             if verbose:
                                 print("did not get marriage offer")
                         if verbose:
@@ -73,5 +72,5 @@ def single_women(school_group, t, w_m_emax, h_m_emax, w_s_emax, h_s_emax, adjust
                     if verbose:
                        print("emax(", t, ", ", ability_i, ", ", school_group, ")=", sum / c.DRAW_B)
                        print("======================================================")
-                       iter_count = iter_count + 1
+                    iter_count = iter_count + 1
     return iter_count

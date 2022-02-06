@@ -28,8 +28,9 @@ class Wife:
     self.T_END = 0
 
 
-def update_wife_schooling(t, wife):
+def update_wife_schooling(school_group, t, wife):
   # T_END is used together with the t index which get values 0-26
+  wife.WS = school_group
   wife.AGE = c.AGE_VALUES[wife.WS] + t
   wife.age_index = c.AGE_INDEX_VALUES[wife.WS]
   wife.T_END = c.TERMINAL - c.AGE_VALUES[wife.WS] - 1

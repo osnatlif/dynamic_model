@@ -12,7 +12,7 @@ def draw_random_utility():
     HS = 1
     forward = False
     wife = draw_wife.draw_wife(t, age_index, HS)
-    draw_wife.update_wife_schooling(t, wife)
+    draw_wife.update_wife_schooling(wife.WS, t, wife)
     husband = draw_husband.draw_husband(t, wife, forward)
     kids = 1
     wage_h = 10000

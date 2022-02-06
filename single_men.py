@@ -36,7 +36,7 @@ def single_men(school_group, t, w_emax, h_emax, w_s_emax, h_s_emax, adjust_bp, v
       if draw_p() < p_wife:
         CHOOSE_WIFE = 1
         wife = draw_wife.draw_wife(t, husband.age_index, school_group)
-        draw_wife.update_wife_schooling(t, wife)
+        draw_wife.update_wife_schooling(wife.WS, t, wife)
         wage_w = calculate_wage.calculate_wage_w(wife, draw_p(), epsilon())
 
       bp = c.INITIAL_BP
