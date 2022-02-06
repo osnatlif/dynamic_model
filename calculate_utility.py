@@ -14,7 +14,13 @@ class Utility:
     self.wife_s = [float('-inf'), float('-inf')]
     self.husband_s = float('-inf')
 
-# Utility calculate_utility(p, w_emax, h_emax, w_s_emax, h_s_emax, kids, wage_h, wage_w, choose_partner, M, wife, husband, t, BP, single_men)
+  def __str__(self):
+    return "Utility:\n\tMarried Woman: " + str(self.wife) + \
+           "\n\tMarried Man: " + str(self.husband) + \
+           "\n\tSingle Woman: " + str(self.wife_s) + \
+           "\n\tSingle Man: " + str(self.husband_s)
+
+
 def calculate_utility(w_emax, h_emax, w_s_emax, h_s_emax, kids, wage_h, wage_w, choose_partner, M, wife, husband, t, BP, single_men):
   if single_men == 1:
     T_END = husband.T_END

@@ -72,14 +72,13 @@ def draw_wife(t, age_index, HS):
 
   # find the first index in the wife array that is not less than the probability
   # note: first column of the wife matrix is skipped since it is just an index, hence the: "+1"
-  value = first(wives_arr[2:], condition=lambda x: x >= prob)
-  w_index = wives_arr[2:].index(value)
+  value, w_index = first(wives_arr[2:], condition=lambda x: x >= prob)
   assert(w_index < 40)   # index will be in the range: 0-39
-  result.WS = w_index/10 + 1
+  result.WS = int(w_index/10) + 1
   assert result.WS in range(1, 5)  # wife schooling is in the range: 1-4
 
   result.WE = c.exp_vector[w_index % 5]        # [0,4]->0, [5,9]->1, [10,14]->0, [15-19]->1, etc.
-  result.emp_state = (w_index/5) % 2
+  result.emp_state = int(w_index/5) % 2
   assert(result.emp_state == c.EMP or result.emp_state == c.UNEMP)
 
   if result.WS == HS:
