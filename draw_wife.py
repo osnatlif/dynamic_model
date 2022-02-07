@@ -28,8 +28,9 @@ class Wife:
     self.T_END = 0
 
 
-def update_wife_schooling(t, wife):
+def update_wife_schooling(school_group, t, wife):
   # T_END is used together with the t index which get values 0-26
+  wife.WS = school_group
   wife.AGE = c.AGE_VALUES[wife.WS] + t
   wife.age_index = c.AGE_INDEX_VALUES[wife.WS]
   wife.T_END = c.TERMINAL - c.AGE_VALUES[wife.WS] - 1
@@ -72,25 +73,18 @@ def draw_wife(t, age_index, HS):
 
   # find the first index in the wife array that is not less than the probability
   # note: first column of the wife matrix is skipped since it is just an index, hence the: "+1"
-  value = first(wives_arr[2:], condition=lambda x: x >= prob)
-  w_index = wives_arr[2:].index(value)
+  value, w_index = first(wives_arr[2:], condition=lambda x: x >= prob)
   assert(w_index < 40)   # index will be in the range: 0-39
-  result.WS = w_index/10 + 1
+  result.WS = int(w_index/10) + 1
   assert result.WS in range(1, 5)  # wife schooling is in the range: 1-4
 
   result.WE = c.exp_vector[w_index % 5]        # [0,4]->0, [5,9]->1, [10,14]->0, [15-19]->1, etc.
-  result.emp_state = (w_index/5) % 2
+  result.emp_state = int(w_index/5) % 2
   assert(result.emp_state == c.EMP or result.emp_state == c.UNEMP)
 
   if result.WS == HS:
-    if HS == 2:
-      result.similar_educ = p.EDUC_MATCH_2
-    elif HS == 3:
-      result.similar_educ = p.EDUC_MATCH_3
-    elif HS == 4:
-      result.similar_educ = p.EDUC_MATCH_4
-    elif HS == 5:
-      result.similar_educ = p.EDUC_MATCH_5
+    result.similar_educ = p.EDUC_MATCH[HS]
+
   return result
 
 

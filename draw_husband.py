@@ -25,12 +25,23 @@ class Husband:
     self.age_index = 0
     self.T_END = 0
 
+  def __str__(self):
+    return "Husband\n\tSchooling: " + str(self.HS) + "\n\tSchooling Map: " + str(self.H_HSD)+","+str(self.H_HSG)+","+str(self.H_SC)+","+str(self.H_CG)+","+str(self.H_PC) + \
+                                     "\n\tExperience: " + str(self.HE) + "\n\tAbility: " + str(self.ability_hi)+","+str(self.ability_h_value) + \
+                                     "\n\tAge: " + str(self.AGE) + "\n\tAge Index: " + str(self.age_index) + "\n\tLast Period: " + str(self.T_END)
+
 
 def first(iterable, condition=lambda x: True):
   # Returns the first item in the `iterable` that satisfies the `condition`
   # If the condition is not given, returns the first item of the iterable
-  # Raises `StopIteration` if no item satysfing the condition is found.
-  return next(x for x in iterable if condition(x))
+  # return the last item if no item satysfing the condition is found.
+  idx = 0
+  for x in iterable:
+    if condition(x):
+      return x, idx
+    idx += 1
+
+  return iterable[idx-1], idx-1
 
 
 def update_school_and_age(school_group, t, husband):   # used only for calculating the EMAX of single men - Backward
@@ -93,7 +104,7 @@ def update_school(husband):         # this function update education in Husnabds
     assert False
 
 
-def draw_husband(t, wife):
+def draw_husband(t, wife, forward):
   result = Husband()
   result.ability_hi = draw_3()                                            # draw ability index
   result.ability_h_value = c.normal_arr[result.ability_hi] * p.sigma3   # calculate ability value
@@ -110,23 +121,14 @@ def draw_husband(t, wife):
   husband_arr = tmp_husbands[t+wife.age_index]      # t+wife.age_index = wife's age which is identical to husband's age
   prob = draw_p()
   # find the first index in the husband array that is not less than the probability
-  # note: first column of the husband matrix is skipped since it is just an index, hence the: "+1"
-  value = first(husband_arr[2:], condition=lambda x: x >= prob)
-  h_index = husband_arr[2:].index(value)
+  # note: first column of the husband matrix is skipped since it is just an index, hence the: [2:]
+  value, h_index = first(husband_arr[2:], condition=lambda x: x >= prob)
   # husband schooling is in the range: 0-4
-  result.HS = h_index/5
-  assert(result.HS in range(1, 6))
-  update_school_and_age(result, wife)
-#  result.HE = h_index % 5 if husband experience is endogenious - you need to draw his experience here
+  result.HS = int(h_index/5)
+  assert(result.HS in range(0, 5))
+  if forward:
+    update_school_and_age_f(wife, result)
+  else:
+    update_school_and_age(result.HS, t, result)
+
   return result
-
-
-def print_husband(husband):
-  print("Husband")
-  print("Schooling: ", husband.WS)
-  print("Schooling Map: ", husband.HSD, " ", husband.HSG, " ", husband.SC, " ", husband.CG, " ", husband.PC)
-  print("Experience: ", husband.WE)
-  print("Ability: (", husband.ability_wi, ", ", husband.ability_w_value, ")")
-  print("Match Quality: (", husband.Q_INDEX, ", ", husband.Q, ")")
-  print("Age: ", husband.AGE)
-  print("Last Period: ", husband.T_END)

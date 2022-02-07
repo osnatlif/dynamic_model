@@ -10,6 +10,13 @@ class MarriageEmpDecision:
     self.outside_option_h_v = float('-inf')
     self.outside_option_w = 0
 
+  def __str__(self):
+    return "MarriageEmpDecision:\n\tMarriage: " + str(self.M) + \
+           "\n\tMax Index: " + str(self.max_weighted_utility_index) + \
+           "\n\tWife's Outside Option: " + str(self.outside_option_w_v) + \
+           "\n\tHusband's Outside Option: " + str(self.outside_option_h_v) + \
+           "\n\tWife's Employment: " + str(self.outside_option_w)
+
 
 def wife_emp_decision(utility):       # single women only chooses employment (if she got an offer)
   if utility.U_W_S[c.UNEMP] > utility.U_W_S[c.EMP]:
@@ -20,9 +27,15 @@ def wife_emp_decision(utility):       # single women only chooses employment (if
 
 def marriage_emp_decision(utility, bp, wife, husband, adjust_bp):
   result = MarriageEmpDecision()
-  result.outside_option_w_v = max(utility.U_W_S[c.UNEMP], utility.U_W_S[c.EMP])
-  result.outside_option_h_v = utility.U_H_S
-  result.outside_option_w = result.outside_option_w_v.index(result.outside_option_w_v)
+
+  if utility.wife_s[c.UNEMP] > utility.wife_s[c.EMP]:
+    result.outside_option_w_v = utility.wife_s[c.UNEMP]
+    result.outside_option_w = c.UNEMP
+  else:
+    result.outside_option_w_v = utility.wife_s[c.EMP]
+    result.outside_option_w = c.EMP
+  result.outside_option_h_v = utility.husband_s
+
   if bp == c.NO_BP:
     # no marriage is possible to begin with
     return result
@@ -37,8 +50,8 @@ def marriage_emp_decision(utility, bp, wife, husband, adjust_bp):
     weighted_utility_both = [float('-inf') for i in range(0, c.CS_SIZE*2)]   # weighted utilities when both has options better than the outside
     weighted_utility_one = [float('-inf') for i in range(0, c.CS_SIZE*2)]  # weighted utilities when only one has option better than the outside
     for csi in range(0, c.CS_SIZE*2):
-      u_h = utility.U_H[csi]
-      u_w = utility.U_W[csi]
+      u_h = utility.husband[csi]
+      u_w = utility.wife[csi]
       if u_h >= result.outside_option_h_v and u_w >= result.outside_option_w_v:
         weighted_utility_both[csi] = u_h*(1.0-bp) + u_w*bp
       elif u_h > result.outside_option_h_v or u_w > result.outside_option_w_v:
@@ -66,8 +79,8 @@ def marriage_emp_decision(utility, bp, wife, husband, adjust_bp):
     if max_weighted_utility_one == c.MINIMUM_UTILITY:
       # the outside option is better for either - no marriage
       break
-    max_U_H = utility.U_H[max_weighted_utility_one_index]
-    max_U_W = utility.U_W[max_weighted_utility_one_index]
+    max_U_H = utility.husband[max_weighted_utility_one_index]
+    max_U_W = utility.wife[max_weighted_utility_one_index]
     # change bp to try and find valid option
     if max_U_H >= result.outside_option_h_v and max_U_W < result.outside_option_w_v:
       # the outside option is better for wife
