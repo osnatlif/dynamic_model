@@ -1,11 +1,12 @@
-from unittest import TestCase
+import unittest
 
 import numpy as np
 import constant_parameters as c
 from objective_function import calculate_emax
 
 
-class TestCalculateEmax(TestCase):
+@unittest.skip("takes too long")
+class TestCalculateEmax(unittest.TestCase):
     def test_calculate_emax(self):
         w_emax = np.ndarray([c.T_MAX, c.EXP_SIZE, c.KIDS_SIZE, c.WORK_SIZE, c.ABILITY_SIZE, c.ABILITY_SIZE, c.SCHOOL_SIZE, c.SCHOOL_SIZE, c.MATCH_Q_SIZE, c.BP_SIZE])
         h_emax = np.ndarray([c.T_MAX, c.EXP_SIZE, c.KIDS_SIZE, c.WORK_SIZE, c.ABILITY_SIZE, c.ABILITY_SIZE, c.SCHOOL_SIZE, c.SCHOOL_SIZE, c.MATCH_Q_SIZE, c.BP_SIZE])
