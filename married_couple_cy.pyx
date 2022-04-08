@@ -1,14 +1,12 @@
-import math
 from random_pool import epsilon
 from random_pool import draw_p
-import parameters as p
-import constant_parameters as c
-import draw_husband
+cimport parameters_cy as p
+cimport constant_parameters_cy as c
+cimport draw_husband_cy as draw_husband
 import draw_wife
-import calculate_wage
-import calculate_utility_cy
-import nash
-import marriage_emp_decision
+cimport calculate_wage_cy
+cimport calculate_utility_cy
+cimport marriage_emp_decision_cy
 
 def married_couple_cy(
 		int WS,
@@ -22,7 +20,7 @@ def married_couple_cy(
 	if verbose:
 		print("====================== married couple: ", WS, ", ", t, " ======================")
 	base_wife = draw_wife.Wife()
-	base_husband = draw_husband.Husband()
+	cdef draw_husband.Husband_cy base_husband = draw_husband.Husband_cy()
 	if draw_wife.update_wife_schooling(WS, t, base_wife) == False:  # update her schooling according to her school_group
 		return 0
 	cdef int iter_count = 0
@@ -36,6 +34,7 @@ def married_couple_cy(
 	cdef int draw_b
 	cdef double w_sum
 	cdef double h_sum
+	cdef calculate_utility_cy.Utility_cy utility = calculate_utility_cy.Utility_cy()
 	for w_exp_i in range(0, c.EXP_SIZE):  # for each experience level: 5 levels - open loop of experience
 		base_wife.WE = c.exp_vector[w_exp_i]
 		for ability_wi in range(0, c.ABILITY_SIZE):  # for each ability level: low, medium, high - open loop of ability
@@ -48,7 +47,7 @@ def married_couple_cy(
 					for prev_emp_state in range(0, c.WORK_SIZE):  # two options: employed and unemployed
 						base_wife.emp_state = prev_emp_state
 						for HS in range (0, 5):    # 5 levels of schooling for husbands
-							if draw_husband.update_school_and_age(HS, t, base_husband) == False:
+							if draw_husband.update_school_and_age_cy(HS, t, base_husband) == False:
 								if verbose:
 									print("skipping husband")
 									print(base_husband)
@@ -64,10 +63,11 @@ def married_couple_cy(
 									w_sum = 0.0
 									h_sum = 0.0
 									for draw_b in range(0, c.DRAW_B):
+										utility.reset()
 										wife = base_wife
 										husband = base_husband
-										wage_h = calculate_wage.calculate_wage_h(husband, epsilon())
-										wage_w = calculate_wage.calculate_wage_w(wife, draw_p(), epsilon())
+										wage_h = calculate_wage_cy.calculate_wage_h_cy(husband, epsilon())
+										wage_w = calculate_wage_cy.calculate_wage_w_cy(wife, draw_p(), epsilon())
 										CHOOSE_PARTNER = 1
 										single_men = False
 										utility = calculate_utility_cy.calculate_utility_cy(w_emax, h_emax, w_s_emax, h_s_emax, kids, wage_h, wage_w,
@@ -76,7 +76,7 @@ def married_couple_cy(
 											draw_wife.print_wife(wife)
 											print(husband)
 										# marriage decision - outside option value wife
-										decision = marriage_emp_decision.marriage_emp_decision(utility, bp, wife, husband, adjust_bp)
+										decision = marriage_emp_decision_cy.marriage_emp_decision_cy(utility, bp, wife, husband, adjust_bp)
 										if decision.M == c.MARRIED:
 											w_sum += utility.wife[decision.max_weighted_utility_index]
 											h_sum += utility.husband[decision.max_weighted_utility_index]
