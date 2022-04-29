@@ -1,10 +1,10 @@
-import constant_parameters as c
+cimport constant_parameters_cy as c
 from calculate_utility_cy cimport Utility_cy
 from draw_husband_cy cimport Husband_cy
-# import numpy as np
+from draw_wife_cy cimport Wife_cy
 
 
-class MarriageEmpDecision:
+cdef class MarriageEmpDecision_cy:
   def __init__(self):
     self.M = c.UNMARRIED
     self.max_weighted_utility_index = 0
@@ -20,15 +20,15 @@ class MarriageEmpDecision:
            "\n\tWife's Employment: " + str(self.outside_option_w)
 
 
-cdef wife_emp_decision_cy(Utility_cy utility):       # single women only chooses employment (if she got an offer)
+cdef int wife_emp_decision_cy(Utility_cy utility):       # single women only chooses employment (if she got an offer)
   if utility.U_W_S[c.UNEMP] > utility.U_W_S[c.EMP]:
     return c.UNEMP
   else:
     return c.EMP
 
 
-cdef marriage_emp_decision_cy(Utility_cy utility, double bp, wife, Husband_cy husband, int adjust_bp):
-  result = MarriageEmpDecision()
+cdef MarriageEmpDecision_cy marriage_emp_decision_cy(Utility_cy utility, double bp, Wife_cy wife, Husband_cy husband, int adjust_bp):
+  cdef MarriageEmpDecision_cy result = MarriageEmpDecision_cy()
 
   if utility.wife_s[c.UNEMP] > utility.wife_s[c.EMP]:
     result.outside_option_w_v = utility.wife_s[c.UNEMP]
@@ -43,14 +43,31 @@ cdef marriage_emp_decision_cy(Utility_cy utility, double bp, wife, Husband_cy hu
     return result
   BP_FLAG_PLUS = False
   BP_FLAG_MINUS = False
-  max_iterations = c.CS_SIZE
+
+  cdef int max_iterations = c.CS_SIZE
+  cdef int max_weighted_utility_one_index
+  cdef double max_weighted_utility_one
+  cdef double max_weighted_utility_both
+  cdef double mininf = float('-inf')
+  cdef double[22] weighted_utility_both = [mininf, mininf, mininf, mininf, mininf, mininf, mininf, mininf, mininf,  mininf, mininf, \
+                                        mininf, mininf, mininf, mininf, mininf, mininf, mininf, mininf, mininf, mininf, mininf]
+  cdef double[22] weighted_utility_one = [mininf, mininf, mininf, mininf, mininf, mininf, mininf, mininf, mininf,  mininf, mininf, \
+                                        mininf, mininf, mininf, mininf, mininf, mininf, mininf, mininf, mininf, mininf, mininf]
+  cdef double u_h
+  cdef double u_w
+  cdef double max_U_H
+  cdef double max_U_W
+  cdef double temp
+  cdef int i
+  cdef int csi
 
   while True:
     if max_iterations == 0:
       print("max iteration reached. BP=", bp)
     assert bp >= 0.0 and bp <= 1.0
-    weighted_utility_both = [float('-inf') for i in range(0, c.CS_SIZE*2)]   # weighted utilities when both has options better than the outside
-    weighted_utility_one = [float('-inf') for i in range(0, c.CS_SIZE*2)]  # weighted utilities when only one has option better than the outside
+    for i in range(0, c.CS_SIZE*2):
+      weighted_utility_both[i] = mininf # weighted utilities when both has options better than the outside
+      weighted_utility_one[i] = mininf  # weighted utilities when only one has option better than the outside
     for csi in range(0, c.CS_SIZE*2):
       u_h = utility.husband[csi]
       u_w = utility.wife[csi]
@@ -73,7 +90,7 @@ cdef marriage_emp_decision_cy(Utility_cy utility, double bp, wife, Husband_cy hu
       husband.HE = husband.HE + 1
       return result
 
-    if adjust_bp == False:
+    if adjust_bp == 0:
       break
     max_iterations = max_iterations - 1
     max_weighted_utility_one = max(weighted_utility_one)

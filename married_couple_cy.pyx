@@ -3,7 +3,7 @@ from random_pool import draw_p
 cimport parameters_cy as p
 cimport constant_parameters_cy as c
 cimport draw_husband_cy as draw_husband
-import draw_wife
+cimport draw_wife_cy as draw_wife
 cimport calculate_wage_cy
 cimport calculate_utility_cy
 cimport marriage_emp_decision_cy
@@ -19,11 +19,12 @@ def married_couple_cy(
 		int verbose):
 	if verbose:
 		print("====================== married couple: ", WS, ", ", t, " ======================")
-	base_wife = draw_wife.Wife()
+	cdef draw_wife.Wife_cy base_wife = draw_wife.Wife_cy()
 	cdef draw_husband.Husband_cy base_husband = draw_husband.Husband_cy()
-	if draw_wife.update_wife_schooling(WS, t, base_wife) == False:  # update her schooling according to her school_group
+	if draw_wife.update_wife_schooling_cy(WS, t, base_wife) == 0:  # update her schooling according to her school_group
 		return 0
 	cdef int iter_count = 0
+	cdef int w_exp_i
 	cdef int ability_wi
 	cdef int ability_hi
 	cdef int kids
@@ -34,12 +35,14 @@ def married_couple_cy(
 	cdef int draw_b
 	cdef double w_sum
 	cdef double h_sum
+	cdef marriage_emp_decision_cy.MarriageEmpDecision_cy decision
+
 	cdef calculate_utility_cy.Utility_cy utility = calculate_utility_cy.Utility_cy()
 	for w_exp_i in range(0, c.EXP_SIZE):  # for each experience level: 5 levels - open loop of experience
 		base_wife.WE = c.exp_vector[w_exp_i]
 		for ability_wi in range(0, c.ABILITY_SIZE):  # for each ability level: low, medium, high - open loop of ability
-			base_wife.ability_hi = ability_wi
-			base_wife.ability_h_value = c.normal_arr[ability_wi] * p.sigma3  # wife ability - low, medium, high
+			base_wife.ability_wi = ability_wi
+			base_wife.ability_w_value = c.normal_arr[ability_wi] * p.sigma3  # wife ability - low, medium, high
 			for ability_hi in range(0, c.ABILITY_SIZE):  # for each ability level: low, medium, high - open loop of ability
 				base_husband.ability_hi = ability_hi
 				base_husband.ability_h_value = c.normal_arr[ability_hi] * p.sigma3  # wife ability - low, medium, high
@@ -73,7 +76,7 @@ def married_couple_cy(
 										utility = calculate_utility_cy.calculate_utility_cy(w_emax, h_emax, w_s_emax, h_s_emax, kids, wage_h, wage_w,
 																										CHOOSE_PARTNER, c.MARRIED, wife, husband, t, bp, single_men)
 										if verbose:
-											draw_wife.print_wife(wife)
+											print(wife)
 											print(husband)
 										# marriage decision - outside option value wife
 										decision = marriage_emp_decision_cy.marriage_emp_decision_cy(utility, bp, wife, husband, adjust_bp)

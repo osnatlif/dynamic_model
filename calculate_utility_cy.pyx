@@ -6,6 +6,7 @@ from value_to_index import bp_to_index
 from gross_to_net import gross_to_net
 cimport constant_parameters_cy as c
 from draw_husband_cy cimport Husband_cy
+from draw_wife_cy cimport Wife_cy
 
 cdef class Utility_cy:
   def __init__(self):
@@ -32,7 +33,7 @@ cdef class Utility_cy:
     self.husband_s = float('-inf')
 
 
-cdef calculate_utility_cy(
+cdef Utility_cy calculate_utility_cy(
         double[:,:,:,:,:,:,:,:,:,:] w_emax,
         double[:,:,:,:,:,:,:,:,:,:]h_emax,
         double[:,:,:,:,:,:] w_s_emax,
@@ -41,7 +42,9 @@ cdef calculate_utility_cy(
         double wage_h,
         double wage_w,
         int choose_partner,
-        int M, wife, Husband_cy husband,
+        int M,
+        Wife_cy wife,
+        Husband_cy husband,
         int t,
         double BP,
         int single_men):

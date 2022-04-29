@@ -1,8 +1,9 @@
 from libc.math cimport exp as cexp
 cimport parameters_cy as p
 from draw_husband_cy cimport Husband_cy
+from draw_wife_cy cimport Wife_cy
 
-cdef calculate_wage_h_cy(Husband_cy husband, double epsilon):
+cdef double calculate_wage_h_cy(Husband_cy husband, double epsilon):
     cdef double tmp1
     cdef double tmp2
     cdef double wage
@@ -15,7 +16,7 @@ cdef calculate_wage_h_cy(Husband_cy husband, double epsilon):
     return wage
 
 
-cdef calculate_wage_w_cy(wife, double w_draw, double epsilon):
+cdef double calculate_wage_w_cy(Wife_cy wife, double w_draw, double epsilon):
     # this function calculates wives actual wage
     cdef double prob_tmp = (p.row0_w*wife.emp_state + p.row11_w*wife.HSG + p.row12_w*wife.SC + p.row13_w*wife.CG + p.row14_w*wife.PC + p.row2_w*wife.WE)
     cdef double prob_w = cexp(prob_tmp)/(1+cexp(prob_tmp))

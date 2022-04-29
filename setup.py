@@ -13,6 +13,7 @@ extensions = [
         Extension("parameters_cy", ["parameters_cy.pyx"]),
         Extension("constant_parameters_cy", ["constant_parameters_cy.pyx"]),
         Extension("draw_husband_cy", ["draw_husband_cy.pyx"]),
+        Extension("draw_wife_cy", ["draw_wife_cy.pyx"]),
         Extension("marriage_emp_decision_cy", ["marriage_emp_decision_cy.pyx"])
 ]
 #define_macros=[('NPY_NO_DEPRECATED_API', 'NPY_1_7_API_VERSION')]

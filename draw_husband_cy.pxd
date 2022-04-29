@@ -1,3 +1,5 @@
+cimport draw_wife_cy
+
 cdef class Husband_cy:
   cdef int H_HSD
   cdef int H_HSG
@@ -12,6 +14,6 @@ cdef class Husband_cy:
   cdef int age_index
   cdef int T_END
 
-cdef update_school_and_age_cy(int school_group, int t, Husband_cy husband)
+cdef int update_school_and_age_cy(int school_group, int t, Husband_cy husband)
 cdef update_school_cy(Husband_cy husband)
-cdef Husband_cy draw_husband_cy(int t, object wife, int forward)
+cdef Husband_cy draw_husband_cy(int t, draw_wife_cy.Wife_cy wife, int forward)

@@ -1,5 +1,6 @@
 cimport parameters_cy as p
 cimport constant_parameters_cy as c
+cimport draw_wife_cy
 import numpy as np
 
 cdef double[:,:] husbands2 = np.loadtxt("husbands_2.out")
@@ -16,7 +17,7 @@ cdef class Husband_cy:
     self.H_CG = 0
     self.H_PC = 0
     self.HS = 0   # husband schooling, can get values of 0-4
-    self.HE = 0    # husband experience
+    self.HE = 0   # husband experience
     self.ability_h_value = 0.0
     self.ability_hi = 0
     self.AGE = 0
@@ -29,7 +30,7 @@ cdef class Husband_cy:
                                      "\n\tAge: " + str(self.AGE) + "\n\tAge Index: " + str(self.age_index) + "\n\tLast Period: " + str(self.T_END)
 
 
-cdef update_school_and_age_cy(int school_group, int t, Husband_cy husband):   # used only for calculating the EMAX of single men - Backward
+cdef int update_school_and_age_cy(int school_group, int t, Husband_cy husband):   # used only for calculating the EMAX of single men - Backward
   husband.AGE = c.AGE_VALUES[school_group] + t
   husband.age_index = c.AGE_INDEX_VALUES[school_group]         # AGE_INDEX_VALUES = [0, 0, 2, 4, 7]
   husband.T_END = c.TERMINAL - c.AGE_VALUES[school_group] - 1  # AGE_VALUES = [18, 18, 20, 22, 25]
@@ -39,8 +40,8 @@ cdef update_school_and_age_cy(int school_group, int t, Husband_cy husband):   # 
     husband.HE = 0  # if husband is still at school, experience would be zero
   update_school_cy(husband)
   if t > husband.T_END:
-    return False
-  return True
+    return 0
+  return 1
 
 
 def update_school_and_age_f(wife, husband):     # used only for forward solution - when wife draw a partner
@@ -89,7 +90,7 @@ cdef update_school_cy(Husband_cy husband):         # this function update educat
     assert False
 
 
-cdef Husband_cy draw_husband_cy(int t, object wife, int forward):
+cdef Husband_cy draw_husband_cy(int t, draw_wife_cy.Wife_cy wife, int forward):
   cdef Husband_cy result = Husband_cy()
   result.ability_hi = np.random.randint(0, 2)                                           # draw ability index
   result.ability_h_value = c.normal_arr[result.ability_hi] * p.sigma3   # calculate ability value
