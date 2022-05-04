@@ -93,7 +93,7 @@ cdef double EDUC_MATCH_2
 cdef double EDUC_MATCH_3
 cdef double EDUC_MATCH_4
 cdef double EDUC_MATCH_5
-cdef double *EDUC_MATCH
+cdef double[5] EDUC_MATCH
 cdef double sigma_h_wage
 cdef double sigma_w_wage
 cdef double sigma3

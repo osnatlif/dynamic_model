@@ -93,14 +93,3 @@ cdef Wife_cy draw_wife_cy(int t, int age_index, int HS):
     result.similar_educ = p.EDUC_MATCH[HS]
 
   return result
-
-
-def print_wife(wife):
-  print("Wife")
-  print("Schooling: ", wife.WS)
-  print("Schooling Map: ", wife.HSD, " ", wife.HSG, " ", wife.SC, " ", wife.CG, " ", wife.PC)
-  print("Experience: ", wife.WE)
-  print("Ability: (", wife.ability_wi,  ", ", wife.ability_w_value, ")")
-  print("Match Quality: (", wife.Q_INDEX, ", ", wife.Q, ")")
-  print("Age: ", wife.AGE)
-  print("Last Period: ", wife.T_END)

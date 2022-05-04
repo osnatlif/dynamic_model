@@ -1,9 +1,10 @@
 from libc.math cimport pow as cpow
 import numpy as np
 cimport parameters_cy as p
-from value_to_index import exp_to_index
-from value_to_index import bp_to_index
-from gross_to_net import gross_to_net
+from value_to_index_cy cimport exp_to_index_cy
+from value_to_index_cy cimport bp_to_index_cy
+from gross_to_net_cy cimport gross_to_net_cy
+from gross_to_net_cy cimport NetIncome_cy
 cimport constant_parameters_cy as c
 from draw_husband_cy cimport Husband_cy
 from draw_wife_cy cimport Wife_cy
@@ -59,8 +60,8 @@ cdef Utility_cy calculate_utility_cy(
     age_index = wife.age_index
 
   assert t <= T_END
-  net = gross_to_net(kids, wage_w, wage_h, t, age_index)
-  result = Utility_cy()
+  cdef NetIncome_cy net = gross_to_net_cy(kids, wage_w, wage_h, t, age_index)
+  cdef Utility_cy result = Utility_cy()
   cdef int kids_h = c.NO_KIDS
   cdef double CS
   cdef double UC_W1
@@ -122,11 +123,11 @@ cdef Utility_cy calculate_utility_cy(
             + p.t11_h*(husband.HE+1.0)+p.t12_h+p.t13_h*kids+p.t14_h*(wife.Q+wife.similar_educ)+p.t16_h)
       elif t < T_END:
         # the loop goes from 28 to 1, but for SC, CG and PC the loop is shorter
-        exp_wi = exp_to_index(wife.WE)
-        BPi = bp_to_index(BP)
+        exp_wi = exp_to_index_cy(wife.WE)
+        BPi = bp_to_index_cy(BP)
         result.wife[i] = UC_W1 + c.beta0*w_emax[t+1][exp_wi][kids][c.UNEMP][wife.ability_wi][husband.ability_hi][husband.HS][wife.WS][wife.Q_INDEX][BPi]
         result.husband[i] = UC_H1 + c.beta0*h_emax[t+1][exp_wi][kids][c.UNEMP][wife.ability_wi][husband.ability_hi][husband.HS][wife.WS][wife.Q_INDEX][BPi]
-        exp_wi = exp_to_index(wife.WE+1)
+        exp_wi = exp_to_index_cy(wife.WE+1)
         if wage_w > 0:
           result.wife[c.CS_SIZE+i] = UC_W2 + c.beta0*w_emax[t+1][exp_wi][kids][c.EMP][wife.ability_wi][husband.ability_hi][husband.HS][wife.WS][wife.Q_INDEX][BPi]
           result.husband[c.CS_SIZE+i] = UC_H2 + c.beta0*h_emax[t+1][exp_wi][kids][c.EMP][wife.ability_wi][husband.ability_hi][husband.HS][wife.WS][wife.Q_INDEX][BPi]
@@ -142,7 +143,7 @@ cdef Utility_cy calculate_utility_cy(
       result.wife_s[c.EMP] = (UC_W_S_EMP + p.t1_w * wife.HSG + p.t2_w * wife.SC + p.t3_w * wife.CG + p.t4_w * wife.PC + p.t5_w * (
                 wife.WE + 1.0) + p.t13_w * kids + p.t16_w)
     else:
-      exp_wi = exp_to_index(wife.WE)
+      exp_wi = exp_to_index_cy(wife.WE)
       result.wife_s[c.EMP] = UC_W_S_EMP + c.beta0*w_s_emax[t+1][exp_wi][kids][c.EMP][wife.ability_wi][wife.WS]
 
   cdef double UC_H_S = cpow(net.net_income_s_h, p.alpha)/p.alpha
@@ -150,7 +151,7 @@ cdef Utility_cy calculate_utility_cy(
     result.wife_s[c.UNEMP] = UC_W_S_UNEMP+p.t1_w*wife.HSG+p.t2_w*wife.SC+p.t3_w*wife.CG+p.t4_w*wife.PC+p.t5_w*wife.WE +p.t13_w*kids
     result.husband_s = UC_H_S+p.t6_h*husband.H_HSD+p.t7_h*husband.H_HSG+p.t8_h*husband.H_SC+p.t9_h*husband.H_CG+p.t10_h*husband.H_PC+p.t11_h*(husband.HE+1.0)+p.t13_h*kids_h
   else:
-    exp_wi = exp_to_index(wife.WE)
+    exp_wi = exp_to_index_cy(wife.WE)
     result.wife_s[c.UNEMP] = UC_W_S_UNEMP + c.beta0*w_s_emax[t+1][exp_wi][kids][c.UNEMP][wife.ability_wi][wife.WS]
     result.husband_s = UC_H_S + c.beta0*h_s_emax[t+1][husband.ability_hi][husband.HS]
 

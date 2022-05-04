@@ -1,5 +1,4 @@
-from random_pool import epsilon
-from random_pool import draw_p
+import numpy as np
 cimport parameters_cy as p
 cimport constant_parameters_cy as c
 cimport draw_husband_cy as draw_husband
@@ -69,8 +68,8 @@ def married_couple_cy(
 										utility.reset()
 										wife = base_wife
 										husband = base_husband
-										wage_h = calculate_wage_cy.calculate_wage_h_cy(husband, epsilon())
-										wage_w = calculate_wage_cy.calculate_wage_w_cy(wife, draw_p(), epsilon())
+										wage_h = calculate_wage_cy.calculate_wage_h_cy(husband, np.random.normal(0, 1))
+										wage_w = calculate_wage_cy.calculate_wage_w_cy(wife, np.random.uniform(0, 1), np.random.normal(0, 1))
 										CHOOSE_PARTNER = 1
 										single_men = False
 										utility = calculate_utility_cy.calculate_utility_cy(w_emax, h_emax, w_s_emax, h_s_emax, kids, wage_h, wage_w,

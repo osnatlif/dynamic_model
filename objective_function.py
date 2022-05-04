@@ -14,7 +14,7 @@ import nash
 import marriage_emp_decision
 import single_men
 import single_women
-import married_couple
+import married_couple_cy
 
 
 def calculate_emax(w_m_emax, h_m_emax, w_s_emax, h_s_emax, adjust_bp, verbose): 
@@ -29,7 +29,7 @@ def calculate_emax(w_m_emax, h_m_emax, w_s_emax, h_s_emax, adjust_bp, verbose):
       iter_count += single_women.single_women(WS, t, w_m_emax, h_m_emax, w_s_emax, h_s_emax, adjust_bp, verbose)
     # EMAX FOR MARRIED COUPLE
     for WS in range(1, c.SCHOOL_SIZE):          # SCHOOL_W_VALUES
-      iter_count += married_couple.married_couple(WS, t, w_m_emax, h_m_emax, w_s_emax, h_s_emax, adjust_bp, verbose)
+      iter_count += married_couple_cy.married_couple_cy(WS, t, w_m_emax, h_m_emax, w_s_emax, h_s_emax, adjust_bp, verbose)
   return iter_count
 
 
