@@ -1,10 +1,10 @@
-cimport constant_parameters_cy as c
-from calculate_utility_cy cimport Utility_cy
-from draw_husband_cy cimport Husband_cy
-from draw_wife_cy cimport Wife_cy
+cimport constant_parameters as c
+from calculate_utility cimport Utility
+from draw_husband cimport Husband
+from draw_wife cimport Wife
 
 
-cdef class MarriageEmpDecision_cy:
+cdef class MarriageEmpDecision:
   def __init__(self):
     self.M = c.UNMARRIED
     self.max_weighted_utility_index = 0
@@ -20,15 +20,15 @@ cdef class MarriageEmpDecision_cy:
            "\n\tWife's Employment: " + str(self.outside_option_w)
 
 
-cdef int wife_emp_decision_cy(Utility_cy utility):       # single women only chooses employment (if she got an offer)
+cdef int wife_emp_decision(Utility utility):       # single women only chooses employment (if she got an offer)
   if utility.U_W_S[c.UNEMP] > utility.U_W_S[c.EMP]:
     return c.UNEMP
   else:
     return c.EMP
 
 
-cdef MarriageEmpDecision_cy marriage_emp_decision_cy(Utility_cy utility, double bp, Wife_cy wife, Husband_cy husband, int adjust_bp):
-  cdef MarriageEmpDecision_cy result = MarriageEmpDecision_cy()
+cdef MarriageEmpDecision marriage_emp_decision(Utility utility, double bp, Wife wife, Husband husband, int adjust_bp):
+  cdef MarriageEmpDecision result = MarriageEmpDecision()
 
   if utility.wife_s[c.UNEMP] > utility.wife_s[c.EMP]:
     result.outside_option_w_v = utility.wife_s[c.UNEMP]

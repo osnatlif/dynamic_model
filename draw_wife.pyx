@@ -1,13 +1,12 @@
 import numpy as np
-import parameters as p
-import constant_parameters as c
-from random_pool import draw_3
-from random_pool import draw_p
-from draw_husband import first
-wives = np.loadtxt("wives.out")
+cimport parameters as p
+cimport constant_parameters as c
 
 
-class Wife:
+cdef double[:,:] wives = np.loadtxt("wives.out")
+
+
+cdef class Wife:
   def __init__(self):
     # following are indicators for the wife's schooling they have values of 0/1 and only one of them could be 1
     self.HSD = 0   # should always remain 0
@@ -27,8 +26,13 @@ class Wife:
     self.age_index = 0
     self.T_END = 0
 
+  def __str__(self):
+    return "Wife\n\tSchooling: " + str(self.WS) + "\n\tSchooling Map: " + str(self.HSD) + "," + str(self.HSG) + "," + str(self.SC) + "," + str(self.CG) + "," + str(self.PC) + \
+           "\n\tExperience: " + str(self.WE) + "\n\tAbility: " + str(self.ability_wi) + "," + str(self.ability_w_value) + \
+           "\n\tMatch Quality: " + str(self.Q_INDEX) + ", " + str(self.Q) + \
+           "\n\tAge: " + str(self.AGE) + "\n\tAge Index: " + str(self.age_index) + "\n\tLast Period: " + str(self.T_END)
 
-def update_wife_schooling(school_group, t, wife):
+cdef int update_wife_schooling(int school_group, int t, Wife wife):
   # T_END is used together with the t index which get values 0-26
   wife.WS = school_group
   wife.AGE = c.AGE_VALUES[wife.WS] + t
@@ -58,22 +62,25 @@ def update_wife_schooling(school_group, t, wife):
     assert False
 
   if t > wife.T_END:
-    return False
-  return True
+    return 0
+  return 1
 
-
-def draw_wife(t, age_index, HS):
-  result = Wife()
-  result.Q_INDEX = draw_3()
+cdef Wife draw_wife(int t, int age_index, int HS):
+  cdef Wife result = Wife()
+  result.Q_INDEX = np.random.randint(0, 2)
   result.Q = c.normal_arr[result.Q_INDEX]*p.sigma4
-  result.ability_wi = draw_3()
+  result.ability_wi = np.random.randint(0, 2)
   result.ability_w_value = c.normal_arr[result.ability_wi] * p.sigma3
-  wives_arr = wives[t+age_index]
-  prob = draw_p()
+  cdef double[:] wives_arr = wives[t+age_index]
+  cdef double prob = np.random.uniform(0, 1)
 
-  # find the first index in the wife array that is not less than the probability
-  # note: first column of the wife matrix is skipped since it is just an index, hence the: "+1"
-  value, w_index = first(wives_arr[2:], condition=lambda x: x >= prob)
+  cdef int w_index = 0
+  cdef double value
+  for value in wives_arr:
+    if value >= prob:
+      break
+    w_index +=1
+
   assert(w_index < 40)   # index will be in the range: 0-39
   result.WS = int(w_index/10) + 1
   assert result.WS in range(1, 5)  # wife schooling is in the range: 1-4
@@ -86,14 +93,3 @@ def draw_wife(t, age_index, HS):
     result.similar_educ = p.EDUC_MATCH[HS]
 
   return result
-
-
-def print_wife(wife):
-  print("Wife")
-  print("Schooling: ", wife.WS)
-  print("Schooling Map: ", wife.HSD, " ", wife.HSG, " ", wife.SC, " ", wife.CG, " ", wife.PC)
-  print("Experience: ", wife.WE)
-  print("Ability: (", wife.ability_wi,  ", ", wife.ability_w_value, ")")
-  print("Match Quality: (", wife.Q_INDEX, ", ", wife.Q, ")")
-  print("Age: ", wife.AGE)
-  print("Last Period: ", wife.T_END)

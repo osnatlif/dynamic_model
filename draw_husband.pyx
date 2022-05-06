@@ -1,16 +1,14 @@
-import parameters as p
-import constant_parameters as c
-from random_pool import draw_3
-from random_pool import draw_p
+cimport parameters as p
+cimport constant_parameters as c
+cimport draw_wife
 import numpy as np
 
-husbands2 = np.loadtxt("husbands_2.out")
-husbands3 = np.loadtxt("husbands_3.out")
-husbands4 = np.loadtxt("husbands_4.out")
-husbands5 = np.loadtxt("husbands_5.out")
+cdef double[:,:] husbands2 = np.loadtxt("husbands_2.out")
+cdef double[:,:] husbands3 = np.loadtxt("husbands_3.out")
+cdef double[:,:] husbands4 = np.loadtxt("husbands_4.out")
+cdef double[:,:] husbands5 = np.loadtxt("husbands_5.out")
 
-
-class Husband:
+cdef class Husband:
   def __init__(self):
     self.H_HSD = 0
     self.H_HSG = 0
@@ -18,7 +16,7 @@ class Husband:
     self.H_CG = 0
     self.H_PC = 0
     self.HS = 0   # husband schooling, can get values of 0-4
-    self.HE = 0    # husband experience
+    self.HE = 0   # husband experience
     self.ability_h_value = 0.0
     self.ability_hi = 0
     self.AGE = 0
@@ -31,20 +29,7 @@ class Husband:
                                      "\n\tAge: " + str(self.AGE) + "\n\tAge Index: " + str(self.age_index) + "\n\tLast Period: " + str(self.T_END)
 
 
-def first(iterable, condition=lambda x: True):
-  # Returns the first item in the `iterable` that satisfies the `condition`
-  # If the condition is not given, returns the first item of the iterable
-  # return the last item if no item satysfing the condition is found.
-  idx = 0
-  for x in iterable:
-    if condition(x):
-      return x, idx
-    idx += 1
-
-  return iterable[idx-1], idx-1
-
-
-def update_school_and_age(school_group, t, husband):   # used only for calculating the EMAX of single men - Backward
+cdef int update_school_and_age(int school_group, int t, Husband husband):   # used only for calculating the EMAX of single men - Backward
   husband.AGE = c.AGE_VALUES[school_group] + t
   husband.age_index = c.AGE_INDEX_VALUES[school_group]         # AGE_INDEX_VALUES = [0, 0, 2, 4, 7]
   husband.T_END = c.TERMINAL - c.AGE_VALUES[school_group] - 1  # AGE_VALUES = [18, 18, 20, 22, 25]
@@ -54,8 +39,8 @@ def update_school_and_age(school_group, t, husband):   # used only for calculati
     husband.HE = 0  # if husband is still at school, experience would be zero
   update_school(husband)
   if t > husband.T_END:
-    return False
-  return True
+    return 0
+  return 1
 
 
 def update_school_and_age_f(wife, husband):     # used only for forward solution - when wife draw a partner
@@ -69,7 +54,7 @@ def update_school_and_age_f(wife, husband):     # used only for forward solution
   update_school(husband)
 
 
-def update_school(husband):         # this function update education in Husnabds structures
+cdef update_school(Husband husband):         # this function update education in Husnabds structures
   if husband.HS == 0:
     husband.H_HSD = 1
     husband.H_HSG = 0
@@ -104,11 +89,12 @@ def update_school(husband):         # this function update education in Husnabds
     assert False
 
 
-def draw_husband(t, wife, forward):
-  result = Husband()
-  result.ability_hi = draw_3()                                            # draw ability index
+cdef Husband draw_husband(int t, draw_wife.Wife wife, int forward):
+  cdef Husband result = Husband()
+  result.ability_hi = np.random.randint(0, 2)                                           # draw ability index
   result.ability_h_value = c.normal_arr[result.ability_hi] * p.sigma3   # calculate ability value
 
+  cdef double[:,:] tmp_husbands
   if wife.WS == 1:
     tmp_husbands = husbands2
   elif wife.WS == 2:
@@ -118,11 +104,16 @@ def draw_husband(t, wife, forward):
   else:
     tmp_husbands = husbands5
 
-  husband_arr = tmp_husbands[t+wife.age_index]      # t+wife.age_index = wife's age which is identical to husband's age
-  prob = draw_p()
+  cdef double[:] husband_arr = tmp_husbands[t+wife.age_index]      # t+wife.age_index = wife's age which is identical to husband's age
+  cdef double prob = np.random.uniform(0, 1)
   # find the first index in the husband array that is not less than the probability
   # note: first column of the husband matrix is skipped since it is just an index, hence the: [2:]
-  value, h_index = first(husband_arr[2:], condition=lambda x: x >= prob)
+  cdef int h_index = 0
+  cdef double value
+  for value in husband_arr:
+    if value >= prob:
+      break
+    h_index +=1
   # husband schooling is in the range: 0-4
   result.HS = int(h_index/5)
   assert(result.HS in range(0, 5))

@@ -1,10 +1,10 @@
-cimport constant_parameters_cy as c
-from calculate_utility_cy cimport Utility_cy
+cimport constant_parameters as c
+from calculate_utility cimport Utility
 import numpy as np
 
 
 # find the BP value that has the maximum nash value
-cdef double nash_cy(Utility_cy utility):
+cdef double nash(Utility utility):
   # return 0.5    -    if you want a constant bp of 0.5 - remove comment
   # marriage decision - outside option value wife
   cdef double outside_option_w_v = max(utility.wife_s[c.UNEMP], utility.wife_s[c.EMP])

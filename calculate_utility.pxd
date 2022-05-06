@@ -1,8 +1,8 @@
-from draw_husband_cy cimport Husband_cy
-from draw_wife_cy cimport Wife_cy
+from draw_husband cimport Husband
+from draw_wife cimport Wife
 
 # Utility class
-cdef class Utility_cy:
+cdef class Utility:
   cdef double[:] wife
   cdef double[:] husband
   cdef double[:] wife_s
@@ -12,7 +12,7 @@ cdef class Utility_cy:
 
 # calculate_utility function
 # return Utility class
-cdef Utility_cy calculate_utility_cy(
+cdef Utility calculate_utility(
         double[:,:,:,:,:,:,:,:,:,:] w_emax,
         double[:,:,:,:,:,:,:,:,:,:] h_emax,
         double[:,:,:,:,:,:] w_s_emax,
@@ -22,10 +22,8 @@ cdef Utility_cy calculate_utility_cy(
         double wage_w,
         int choose_partner,
         int M,
-        Wife_cy wife,
-        Husband_cy husband,
+        Wife wife,
+        Husband husband,
         int t,
         double BP,
         int single_men)
-
-

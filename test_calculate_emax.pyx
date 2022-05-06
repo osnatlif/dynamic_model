@@ -1,9 +1,8 @@
 from time import perf_counter
 from unittest import TestCase
-
 import numpy as np
-import constant_parameters as c
-from objective_function import calculate_emax
+cimport constant_parameters as c
+from calculate_emax cimport calculate_emax
 
 
 class TestCalculateEmax(TestCase):

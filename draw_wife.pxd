@@ -1,4 +1,5 @@
-cdef class Wife_cy:
+# Wife class
+cdef class Wife:
     cdef int HSD
     cdef int HSG
     cdef int SC
@@ -16,5 +17,10 @@ cdef class Wife_cy:
     cdef int age_index
     cdef int T_END
 
-cdef int update_wife_schooling_cy(int school_group, int t, Wife_cy wife)
-cdef Wife_cy draw_wife_cy(int t, int age_index, int HS)
+# update school and age of wife
+# return indication (0,1) on whether calculation should stop or continue
+cdef int update_wife_schooling(int school_group, int t, Wife wife)
+
+# draw a husband
+cdef Wife draw_wife(int t, int age_index, int HS)
+

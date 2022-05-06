@@ -1,16 +1,22 @@
+from libc.math cimport pow
 import numpy as np
-import parameters as p
-from value_to_index import exp_to_index
-from value_to_index import bp_to_index
-from gross_to_net import gross_to_net
-import constant_parameters as c
+cimport parameters as p
+from value_to_index cimport exp_to_index
+from value_to_index cimport bp_to_index
+from gross_to_net cimport gross_to_net
+from gross_to_net cimport NetIncome
+cimport constant_parameters as c
+from draw_husband cimport Husband
+from draw_wife cimport Wife
 
-class Utility:
+cdef class Utility:
   def __init__(self):
-    self.wife = [float('-inf') for i in range(0, c.CS_SIZE*2)]
-    self.husband = [float('-inf') for i in range(0, c.CS_SIZE*2)]
-    self.wife_s = [float('-inf'), float('-inf')]
-    self.husband_s = float('-inf')
+    #self.wife = [float('-inf') for i in range(0, c.CS_SIZE * 2)]
+    self.wife = np.empty(c.CS_SIZE * 2)
+    self.husband = np.empty(c.CS_SIZE * 2)
+    self.wife_s = np.empty(2)
+    self.husband_s = 0.0
+    self.reset()
 
   def __str__(self):
     return "Utility:\n\tMarried Woman: " + str(self.wife) + \
@@ -18,8 +24,34 @@ class Utility:
            "\n\tSingle Woman: " + str(self.wife_s) + \
            "\n\tSingle Man: " + str(self.husband_s)
 
+  cdef reset(self):
+    cdef int i
+    for i in range (0, c.CS_SIZE * 2):
+      self.wife[i] = float('-inf')
+      self.husband[i] = float('-inf')
+    self.wife_s[0] = float('-inf')
+    self.wife_s[1] = float('-inf')
+    self.husband_s = float('-inf')
 
-def calculate_utility(w_emax, h_emax, w_s_emax, h_s_emax, kids, wage_h, wage_w, choose_partner, M, wife, husband, t, BP, single_men):
+
+cdef Utility calculate_utility(
+        double[:,:,:,:,:,:,:,:,:,:] w_emax,
+        double[:,:,:,:,:,:,:,:,:,:]h_emax,
+        double[:,:,:,:,:,:] w_s_emax,
+        double[:,:,:] h_s_emax,
+        int kids,
+        double wage_h,
+        double wage_w,
+        int choose_partner,
+        int M,
+        Wife wife,
+        Husband husband,
+        int t,
+        double BP,
+        int single_men):
+  cdef int T_END
+  cdef int age_index
+  cdef int i
   if single_men:
     T_END = husband.T_END
     age_index = husband.age_index
@@ -28,9 +60,23 @@ def calculate_utility(w_emax, h_emax, w_s_emax, h_s_emax, kids, wage_h, wage_w, 
     age_index = wife.age_index
 
   assert t <= T_END
-  net = gross_to_net(kids, wage_w, wage_h, t, age_index)
-  result = Utility()
-  kids_h = c.NO_KIDS
+  cdef NetIncome net = gross_to_net(kids, wage_w, wage_h, t, age_index)
+  cdef Utility result = Utility()
+  cdef int kids_h = c.NO_KIDS
+  cdef double CS
+  cdef double UC_W1
+  cdef double UC_W2
+  cdef double UC_H1
+  cdef double UC_H2
+  cdef double total_cons_denom
+  cdef double total_cons1
+  cdef double total_cons2
+  cdef double women_cons_m1
+  cdef double women_cons_m2
+  cdef double men_cons_m1
+  cdef double men_cons_m2
+  cdef int exp_wi
+  cdef int BPi
 
   if M == c.MARRIED or choose_partner:
     kids_h = kids
@@ -85,26 +131,28 @@ def calculate_utility(w_emax, h_emax, w_s_emax, h_s_emax, kids, wage_h, wage_w, 
         if wage_w > 0:
           result.wife[c.CS_SIZE+i] = UC_W2 + c.beta0*w_emax[t+1][exp_wi][kids][c.EMP][wife.ability_wi][husband.ability_hi][husband.HS][wife.WS][wife.Q_INDEX][BPi]
           result.husband[c.CS_SIZE+i] = UC_H2 + c.beta0*h_emax[t+1][exp_wi][kids][c.EMP][wife.ability_wi][husband.ability_hi][husband.HS][wife.WS][wife.Q_INDEX][BPi]
-  UNEMP = 0
-  EMP = 1
-  UC_W_S_UNEMP = p.alpha1_w_s*kids + p.alpha2_w*np.log1p(kids) + p.alpha3_w
+
+  cdef double UC_W_S_UNEMP = p.alpha1_w_s*kids + p.alpha2_w*np.log1p(kids) + p.alpha3_w
+  cdef double women_cons_s2
+  cdef double UC_W_S_EMP
+
   if wage_w > 0:
     women_cons_s2 = net.net_income_s_w/(1.0+kids*0.3)    # women private consumption when single and employed
     UC_W_S_EMP = pow(women_cons_s2, p.alpha)/p.alpha + p.alpha1_w_s*kids
     if t == T_END:
-      result.wife_s[EMP] = (UC_W_S_EMP + p.t1_w * wife.HSG + p.t2_w * wife.SC + p.t3_w * wife.CG + p.t4_w * wife.PC + p.t5_w * (
+      result.wife_s[c.EMP] = (UC_W_S_EMP + p.t1_w * wife.HSG + p.t2_w * wife.SC + p.t3_w * wife.CG + p.t4_w * wife.PC + p.t5_w * (
                 wife.WE + 1.0) + p.t13_w * kids + p.t16_w)
     else:
       exp_wi = exp_to_index(wife.WE)
-      result.wife_s[EMP] = UC_W_S_EMP + c.beta0*w_s_emax[t+1][exp_wi][kids][c.EMP][wife.ability_wi][wife.WS]
+      result.wife_s[c.EMP] = UC_W_S_EMP + c.beta0*w_s_emax[t+1][exp_wi][kids][c.EMP][wife.ability_wi][wife.WS]
 
-  UC_H_S = pow(net.net_income_s_h, p.alpha)/p.alpha
+  cdef double UC_H_S = pow(net.net_income_s_h, p.alpha)/p.alpha
   if t == T_END:
-    result.wife_s[UNEMP] = UC_W_S_UNEMP+p.t1_w*wife.HSG+p.t2_w*wife.SC+p.t3_w*wife.CG+p.t4_w*wife.PC+p.t5_w*wife.WE +p.t13_w*kids
+    result.wife_s[c.UNEMP] = UC_W_S_UNEMP+p.t1_w*wife.HSG+p.t2_w*wife.SC+p.t3_w*wife.CG+p.t4_w*wife.PC+p.t5_w*wife.WE +p.t13_w*kids
     result.husband_s = UC_H_S+p.t6_h*husband.H_HSD+p.t7_h*husband.H_HSG+p.t8_h*husband.H_SC+p.t9_h*husband.H_CG+p.t10_h*husband.H_PC+p.t11_h*(husband.HE+1.0)+p.t13_h*kids_h
   else:
     exp_wi = exp_to_index(wife.WE)
-    result.wife_s[UNEMP] = UC_W_S_UNEMP + c.beta0*w_s_emax[t+1][exp_wi][kids][c.UNEMP][wife.ability_wi][wife.WS]
+    result.wife_s[c.UNEMP] = UC_W_S_UNEMP + c.beta0*w_s_emax[t+1][exp_wi][kids][c.UNEMP][wife.ability_wi][wife.WS]
     result.husband_s = UC_H_S + c.beta0*h_s_emax[t+1][husband.ability_hi][husband.HS]
 
   return result

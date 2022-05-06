@@ -1,12 +1,12 @@
 import numpy as np
-cimport constant_parameters_cy as c
+cimport constant_parameters as c
 
 
 cdef double[:,:] ded_and_ex = np.loadtxt("deductions_exemptions.out")
 cdef double[:,:] tax_brackets = np.loadtxt("tax_brackets.out")
 
 
-cdef class NetIncome_cy:
+cdef class NetIncome:
   def __init__(self):
     self.net_income_s_h = 0
     self.net_income_s_w = 0
@@ -43,7 +43,7 @@ cdef int DED_INTERVAL2_OFFSET = DED_OFFSET + 4
 cdef int DED_INTERVAL3_OFFSET = DED_OFFSET + 5
 
 
-cdef double calculate_tax_cy(double reduced_income, int row_number):
+cdef double calculate_tax(double reduced_income, int row_number):
   cdef double tax = 0.0
   cdef double lower_bracket
   cdef double upper_bracket
@@ -62,7 +62,7 @@ cdef double calculate_tax_cy(double reduced_income, int row_number):
   return tax
 
 
-cdef double calculate_eict_cy(double wage, int row_number, int kids):
+cdef double calculate_eict(double wage, int row_number, int kids):
   cdef double EICT = 0.0
   cdef int kids_offset = DED_KIDS_OFFSET*kids
   cdef int offset1 = DED_INTERVAL1_OFFSET+kids_offset
@@ -79,21 +79,22 @@ cdef double calculate_eict_cy(double wage, int row_number, int kids):
 
   return EICT
 
+
 # similar handling for husband and wife in case of singles
-cdef double gross_to_net_single_cy(int row_number, int kids, double wage, double exemptions, double deductions):
+cdef double gross_to_net_single(int row_number, int kids, double wage, double exemptions, double deductions):
   cdef double tax = 0.0
   cdef double EICT
   if wage > 0.0:
     reduced_income = wage - deductions - exemptions
-    EICT = calculate_eict_cy(wage, row_number, kids)
+    EICT = calculate_eict(wage, row_number, kids)
     if EICT == 0.0:
-      tax = calculate_tax_cy(reduced_income, row_number)
+      tax = calculate_tax(reduced_income, row_number)
     return wage - tax + EICT
 
   return 0.0
 
 
-cdef double gross_to_net_married_cy(int row_number, int kids, double wage_h, double wage_w, double exemptions, double deductions):
+cdef double gross_to_net_married(int row_number, int kids, double wage_h, double wage_w, double exemptions, double deductions):
   cdef double tax = 0.0
   cdef double EICT
   cdef double reduced_income
@@ -101,15 +102,15 @@ cdef double gross_to_net_married_cy(int row_number, int kids, double wage_h, dou
   if wage_h > 0.0:
     reduced_income = wage_h + wage_w - deductions - exemptions
     tot_income = wage_h + wage_w
-    EICT = calculate_eict_cy(tot_income, row_number, kids)
+    EICT = calculate_eict(tot_income, row_number, kids)
     if EICT == 0.0:
-      tax = calculate_tax_cy(reduced_income, row_number)
+      tax = calculate_tax(reduced_income, row_number)
     return tot_income - tax + EICT
 
   return 0.0
 
 
-cdef NetIncome_cy gross_to_net_cy(int kids, double wage_w, double wage_h, int t, int age_index):
+cdef NetIncome gross_to_net(int kids, double wage_w, double wage_h, int t, int age_index):
   # the tax brackets and the deductions and exemptions starts at 1980 and
   # ends at 2035. most of the sample turn 18 at 1980 (NLSY79)
   cdef int row_number = t + age_index           # row number on matrix 1980-2035.
@@ -120,16 +121,16 @@ cdef NetIncome_cy gross_to_net_cy(int kids, double wage_w, double wage_h, int t,
   cdef double exemptions_s_w = ded_and_ex[row_number][4] + ded_and_ex[row_number][5] * kids
   cdef double exemptions_s_h = ded_and_ex[row_number][4]
 
-  cdef NetIncome_cy result = NetIncome_cy()
+  cdef NetIncome result = NetIncome()
 
   # CALCULATE NET INCOME FOR SINGLE WOMEN
-  result.net_income_s_w = gross_to_net_single_cy(row_number, kids, wage_w, exemptions_s_w, deductions_s)
+  result.net_income_s_w = gross_to_net_single(row_number, kids, wage_w, exemptions_s_w, deductions_s)
 
   # CALCULATE NET INCOME FOR SINGLE MEN
-  result.net_income_s_h = gross_to_net_single_cy(row_number, c.NO_KIDS, wage_h, exemptions_s_h, deductions_s)
+  result.net_income_s_h = gross_to_net_single(row_number, c.NO_KIDS, wage_h, exemptions_s_h, deductions_s)
 
   # CALCULATE NET INCOME FOR MARRIED COUPLE
-  result.net_income_m = gross_to_net_married_cy(row_number, kids, wage_h, wage_w, exemptions_m, deductions_m)
-  result.net_income_m_unemp = gross_to_net_married_cy(row_number, kids, wage_h, 0, exemptions_m, deductions_m)
+  result.net_income_m = gross_to_net_married(row_number, kids, wage_h, wage_w, exemptions_m, deductions_m)
+  result.net_income_m_unemp = gross_to_net_married(row_number, kids, wage_h, 0, exemptions_m, deductions_m)
 
   return result

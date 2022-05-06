@@ -1,6 +1,6 @@
 # convert values to indexes on their respective grids
 
-def exp_to_index(exp):   # levels grid: 0, 1-2, 3-4, 5-10, 11+
+cdef int exp_to_index(int exp):   # levels grid: 0, 1-2, 3-4, 5-10, 11+
   if exp == 0:
     return 0
   elif exp < 3:  # 1 or 2 years
@@ -13,7 +13,7 @@ def exp_to_index(exp):   # levels grid: 0, 1-2, 3-4, 5-10, 11+
     return 4
 
 
-def bp_to_index(bp):
+cdef int bp_to_index(double bp):
   assert(bp >= 0 and bp <= 1)
   if bp < 0.2:
     return 0

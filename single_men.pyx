@@ -1,22 +1,22 @@
 import math
 import copy
-import parameters as p
-import constant_parameters as c
-from random_pool import epsilon
-from random_pool import draw_p
-import draw_husband
-import draw_wife
-import calculate_wage
-import calculate_utility
-import marriage_emp_decision
-import nash
+cimport parameters as p
+import numpy as np
+cimport constant_parameters as c
+cimport draw_husband
+cimport draw_wife
+cimport calculate_wage
+cimport calculate_utility
+cimport marriage_emp_decision
+cimport nash
 
 
 def single_men(school_group, t, w_emax, h_emax, w_s_emax, h_s_emax, adjust_bp, verbose):
   if verbose:
     print("====================== single men: ", school_group, t, "  ======================")
 
-  base_husband = draw_husband.Husband()              # create a husband structure (and draw ability, in backward we redefine the ability in the loop
+  cdef draw_husband.Husband base_husband = draw_husband.Husband()              # create a husband structure (and draw ability, in backward we redefine the ability in the loop
+  cdef draw_husband.Husband husband = draw_husband.Husband()  # create a husband structure (and draw ability, in backward we redefine the ability in the loop
   if draw_husband.update_school_and_age(school_group, t, base_husband) == False:     # update his schooling according to his school_group
     return 0
   iter_count = 0
@@ -29,16 +29,16 @@ def single_men(school_group, t, w_emax, h_emax, w_s_emax, h_s_emax, adjust_bp, v
 
     for draw in range(0, c.DRAW_B):
       husband = copy.deepcopy(base_husband)
-      wage_h = calculate_wage.calculate_wage_h(husband, epsilon())
+      wage_h = calculate_wage.calculate_wage_h(husband, np.random.normal(0,1))
       # probabilty of meeting a potential wife
       p_wife = math.exp(p.p0_h+p.p1_h*(husband.AGE+t)+p.p2_h*(husband.AGE+t)**2)/(1.0+math.exp(p.p0_h+p.p1_h*(husband.AGE+t)+p.p2_h*(husband.AGE+t)**2))
       CHOOSE_WIFE = 0
       wage_w = 0.0
       wife = draw_wife.Wife()
-      if draw_p() < p_wife:
+      if np.random.uniform(0, 1) < p_wife:
         CHOOSE_WIFE = 1
         wife = draw_wife.draw_wife(t, husband.age_index, school_group)
-        wage_w = calculate_wage.calculate_wage_w(wife, draw_p(), epsilon())
+        wage_w = calculate_wage.calculate_wage_w(wife, np.random.uniform(0, 1), np.random.normal(0,1))
 
       bp = c.INITIAL_BP
       is_single_men = True
@@ -49,7 +49,7 @@ def single_men(school_group, t, w_emax, h_emax, w_s_emax, h_s_emax, adjust_bp, v
         bp = c.NO_BP
 
       if verbose and CHOOSE_WIFE:
-        draw_wife.print_wife(wife)
+        print(wife)
 
       if bp != c.NO_BP:
         # marriage decision
