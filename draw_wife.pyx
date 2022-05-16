@@ -32,6 +32,7 @@ cdef class Wife:
            "\n\tMatch Quality: " + str(self.Q_INDEX) + ", " + str(self.Q) + \
            "\n\tAge: " + str(self.AGE) + "\n\tAge Index: " + str(self.age_index) + "\n\tLast Period: " + str(self.T_END)
 
+
 cdef int update_wife_schooling(int school_group, int t, Wife wife):
   # T_END is used together with the t index which get values 0-26
   wife.WS = school_group
@@ -64,6 +65,12 @@ cdef int update_wife_schooling(int school_group, int t, Wife wife):
   if t > wife.T_END:
     return 0
   return 1
+
+
+cdef update_ability(int ability, Wife wife):
+  wife.ability_wi = ability
+  wife.ability_w_value = c.normal_arr[ability]*p.sigma3
+
 
 cdef Wife draw_wife(int t, int age_index, int HS):
   cdef Wife result = Wife()

@@ -1,6 +1,6 @@
 cimport parameters as p
 cimport constant_parameters as c
-cimport draw_wife
+from draw_wife cimport Wife
 import numpy as np
 
 cdef double[:,:] husbands2 = np.loadtxt("husbands_2.out")
@@ -43,7 +43,7 @@ cdef int update_school_and_age(int school_group, int t, Husband husband):   # us
   return 1
 
 
-def update_school_and_age_f(wife, husband):     # used only for forward solution - when wife draw a partner
+cdef update_school_and_age_f(Wife wife, Husband husband):     # used only for forward solution - when wife draw a partner
   husband.AGE = wife.AGE
   husband.age_index = wife.age_index         # AGE_INDEX_VALUES = [0, 0, 2, 4, 7]
   husband.T_END = wife.T_END                    # AGE_VALUES = [18, 18, 20, 22, 25]
@@ -89,7 +89,7 @@ cdef update_school(Husband husband):         # this function update education in
     assert False
 
 
-cdef Husband draw_husband(int t, draw_wife.Wife wife, int forward):
+cdef Husband draw_husband(int t, Wife wife, int forward):
   cdef Husband result = Husband()
   result.ability_hi = np.random.randint(0, 2)                                           # draw ability index
   result.ability_h_value = c.normal_arr[result.ability_hi] * p.sigma3   # calculate ability value

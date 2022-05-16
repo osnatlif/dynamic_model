@@ -1,12 +1,14 @@
 # to build the cython extensions use: python setup.py build_ext --inplace
 
-from distutils.core import setup, Extension
+from setuptools import setup, Extension
 from Cython.Build import cythonize
 
 from Cython.Compiler import Options
 Options.buffer_max_dims = 11
 
 extensions = [
+        Extension("moments", ["moments.pyx"]),
+        Extension("forward_simulation", ["forward_simulation.pyx"]),
         Extension("single_men", ["single_men.pyx"]),
         Extension("single_women", ["single_women.pyx"]),
         Extension("married_couple", ["married_couple.pyx"]),
@@ -24,6 +26,5 @@ extensions = [
         Extension("value_to_index", ["value_to_index.pyx"]),
         Extension("marriage_emp_decision", ["marriage_emp_decision.pyx"])
 ]
-#define_macros=[('NPY_NO_DEPRECATED_API', 'NPY_1_7_API_VERSION')]
 
 setup(ext_modules=cythonize(extensions, language_level="3"))

@@ -1,4 +1,4 @@
-cimport draw_wife
+from draw_wife cimport Wife
 
 # Husband class
 cdef class Husband:
@@ -19,5 +19,9 @@ cdef class Husband:
 # return indication (0,1) on whether calculation should stop or continue
 cdef int update_school_and_age(int school_group, int t, Husband husband)
 
+# update school and age of husband
+# when doing forward simulation
+cdef update_school_and_age_f(Wife wife, Husband husband)
+
 # draw a husband
-cdef Husband draw_husband(int t, draw_wife.Wife wife, int forward)
+cdef Husband draw_husband(int t, Wife wife, int forward)

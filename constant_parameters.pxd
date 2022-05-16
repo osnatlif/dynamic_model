@@ -20,6 +20,7 @@ cdef int[5] exp_vector
 # number of children: (0, 1, 2, 3+)
 cdef int KIDS_SIZE
 cdef int[4] KIDS_VALUES
+cdef MAX_NUM_KIDS
 
 # work status: (unemp, emp)
 cdef int UNEMP
@@ -39,6 +40,7 @@ cdef int[2] MARITAL_VALUES
 
 # school groups
 cdef int SCHOOL_SIZE
+cdef int W_SCHOOL_SIZE
 cdef int[5] SCHOOL_H_VALUES
 cdef int[4] SCHOOL_W_VALUES
 

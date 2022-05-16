@@ -1,9 +1,25 @@
+import numpy as np
 from single_men import single_men
 from single_women import single_women
 from married_couple cimport married_couple
 cimport constant_parameters as c
 
-cdef int calculate_emax(
+
+cpdef double[:,:,:,:,:,:,:,:,:,:] create_married_emax():
+    return np.ndarray(
+        [c.T_MAX, c.EXP_SIZE, c.KIDS_SIZE, c.WORK_SIZE, c.ABILITY_SIZE, c.ABILITY_SIZE, c.SCHOOL_SIZE, c.SCHOOL_SIZE,
+         c.MATCH_Q_SIZE, c.BP_SIZE])
+
+
+cpdef double[:,:,:,:,:,:] create_single_w_emax():
+    return np.ndarray([c.T_MAX, c.EXP_SIZE, c.KIDS_SIZE, c.WORK_SIZE, c.ABILITY_SIZE, c.SCHOOL_SIZE])
+
+
+cpdef double[:,:,:] create_single_h_emax():
+    return np.ndarray([c.T_MAX, c.ABILITY_SIZE, c.SCHOOL_SIZE])
+
+
+cpdef int calculate_emax(
 	double[:,:,:,:,:,:,:,:,:,:] w_emax,
 	double[:,:,:,:,:,:,:,:,:,:] h_emax,
 	double[:,:,:,:,:,:] w_s_emax,

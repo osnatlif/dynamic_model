@@ -38,6 +38,7 @@ cdef double row13_w = 0.47732
 cdef double row14_w = 0.59311
 cdef double row2_w = 0.01501
 cdef double hp = 1.22786
+cdef double c1 = 0.0
 cdef double c2 = -0.07518
 cdef double c3 = -0.00009
 cdef double c4 = -0.06917

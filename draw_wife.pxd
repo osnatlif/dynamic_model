@@ -21,6 +21,9 @@ cdef class Wife:
 # return indication (0,1) on whether calculation should stop or continue
 cdef int update_wife_schooling(int school_group, int t, Wife wife)
 
+# update wife's ability
+cdef update_ability(int ability, Wife wife)
+
 # draw a husband
 cdef Wife draw_wife(int t, int age_index, int HS)
 

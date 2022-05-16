@@ -38,6 +38,7 @@ cdef double row13_w
 cdef double row14_w
 cdef double row2_w
 cdef double hp
+cdef double c1
 cdef double c2
 cdef double c3
 cdef double c4

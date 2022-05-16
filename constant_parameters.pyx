@@ -20,6 +20,7 @@ cdef int[5] exp_vector = [0, 2, 4, 8, 16]
 # number of children: (0, 1, 2, 3+)
 cdef int KIDS_SIZE = 4
 cdef int[4] KIDS_VALUES = [0, 1, 2, 3]
+cdef MAX_NUM_KIDS = KIDS_SIZE - 1
 
 # work status: (unemp, emp)
 cdef int UNEMP = 0
@@ -39,6 +40,7 @@ cdef int[2] MARITAL_VALUES = [1, 2]
 
 # school groups
 cdef int SCHOOL_SIZE = 5
+cdef int W_SCHOOL_SIZE = 4
 cdef int[5] SCHOOL_H_VALUES = [0, 1, 2, 3, 4]
 cdef int[4] SCHOOL_W_VALUES = [1, 2, 3, 4] # women do not have the HSD school group
 SCHOOL_NAMES = ["HSD", "HSG", "SC", "CG", "PC"]
