@@ -235,9 +235,9 @@ def forward_simulation(w_m_emax, h_m_emax, w_s_emax, h_s_emax, adjust_bp, verbos
       draw_wife.update_ability(np.random.random_integers(0, 2), wife)
       if draw_f > c.DRAW_F*c.UNEMP_WOMEN_RATIO:
         # update previous employment status according to proportion in population
-        wife.emp_state = c.UNEMP
+        wife.set_emp_state(c.UNEMP)
       else:
-        wife.emp_state = c.EMP
+        wife.set_emp_state(c.EMP)
       # kid age array maximum number of kids = 4 -  0 - oldest kid ... 3 - youngest kid
       kid_age = np.zeros(c.MAX_NUM_KIDS)
       DIVORCE = 0
@@ -255,7 +255,7 @@ def forward_simulation(w_m_emax, h_m_emax, w_s_emax, h_s_emax, adjust_bp, verbos
       first_marriage = True
       first_divorce = True
       # make choices for all periods
-      last_t = wife.T_END
+      last_t = wife.get_T_END()
       if verbose:
         print("=========")
         print("new women")

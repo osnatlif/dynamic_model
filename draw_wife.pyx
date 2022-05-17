@@ -7,6 +7,12 @@ cdef double[:,:] wives = np.loadtxt("wives.out")
 
 
 cdef class Wife:
+  def set_emp_state(self, state):
+    self.emp_state = state
+
+  def get_T_END(self):
+    return self.T_END
+
   def __init__(self):
     # following are indicators for the wife's schooling they have values of 0/1 and only one of them could be 1
     self.HSD = 0   # should always remain 0
