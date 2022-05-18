@@ -1,4 +1,4 @@
-.PHONY: all clean test
+.PHONY: all clean test deps
 
 all:
 	python setup.py build_ext --inplace
@@ -6,6 +6,9 @@ all:
 test: all
 	python -m unittest -v test_married_couple
 	python -m unittest -v test_calculate_emax
+
+deps:
+	pip install -r requirements.txt
 
 clean:
 	python setup.py clean --all

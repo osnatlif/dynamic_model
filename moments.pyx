@@ -1,7 +1,7 @@
 import numpy as np
 from enum import Enum
 cimport constant_parameters as c
-
+from tabulate import tabulate
 
 class Accumulator:
   def __init__(self, dim1, dim2=None):
@@ -11,6 +11,26 @@ class Accumulator:
     else:
       self.val_arr = np.zeros(dim1)
       self.count_arr = np.zeros(dim1)
+
+  def __str__(self):
+    str = ""
+    if len(self.val_arr.shape) == 1:
+      for i in range(0, self.val_arr.shape[0]):
+        if self.count_arr[i] == 0:
+          str += "0 "
+        else:
+          str += str(self.val_arr[i]/self.count_arr[i])
+      return str
+
+    for i in range(0, self.val_arr.shape[0]):
+      for j in range(0, self.val_arr.shape[1]):
+        if self.count_arr[i][j] == 0:
+          str += "0 "
+        else:
+          str += str(self.val_arr[i][j] / self.count_arr[i][j])
+      str += "\n"
+    return str
+
 
   def accumulate(self, value, index1, index2=None):
     if index2 is not None:
@@ -24,7 +44,9 @@ class Accumulator:
       self.val_arr[index1] += value
       self.count_arr[index1] += 1
 
-  def mean(self, index1, index2=None):
+  def mean(self, index1=None, index2=None):
+    if index1 is None:
+      return self.val_arr/self.count_arr
     if index2 is not None:
       if len(self.val_arr.shape) == 1:
           assert False, 'extra dimension'
@@ -45,7 +67,6 @@ class Accumulator:
       if col_count == 0:
         return 0.0
       return col_sum/col_count
-
 
 
 class UpDownMomentsType(Enum):
@@ -77,7 +98,7 @@ MARR_MOM_ROW = c.T_MAX
 MARR_MOM_COL = 13
 EMP_MOM_ROW = c.T_MAX
 EMP_MOM_COL = 13
-GEN_MOM_ROW = 32
+GEN_MOM_ROW = 31
 GEN_MOM_COL = c.SCHOOL_SIZE-1
 
 class EstimatedMoments:
@@ -85,6 +106,13 @@ class EstimatedMoments:
   marr_fer_moments = np.zeros((MARR_MOM_ROW, MARR_MOM_COL))
   wage_moments = np.zeros((WAGE_MOM_ROW, WAGE_MOM_COL))
   general_moments = np.zeros((GEN_MOM_ROW, GEN_MOM_COL))
+
+
+class ActualMoments:
+  emp_moments = np.loadtxt("emp_moments.txt")
+  marr_fer_moments = np.loadtxt("marr_fer_moments.txt")
+  wage_moments = np.loadtxt("wage_moments.txt")
+  general_moments = np.loadtxt("general_moments.txt")
 
 
 class Moments:
@@ -131,11 +159,12 @@ class Moments:
   count_just_divorced = np.zeros(c.SCHOOL_SIZE)
   n_kids_arr  = Accumulator(c.SCHOOL_SIZE)   # # of children by school group
   estimated = EstimatedMoments()
+  actual = ActualMoments()
 
   def __init__(self):
     self.emp_m_kids = [Accumulator(c.SCHOOL_SIZE) for a in range(c.KIDS_SIZE)]
     self.emp_um_kids = [Accumulator(c.SCHOOL_SIZE) for a in range(c.KIDS_SIZE)]
-    self.up_down_moments = [Accumulator(c.SCHOOL_SIZE) for a in range(len(UpDownMomentsType))]
+    self.up_down_moments = Accumulator(len(UpDownMomentsType), c.SCHOOL_SIZE)
 
 
 def mean(sum_moment, count_moment, school_group, t=None):
@@ -240,7 +269,7 @@ def calculate_moments(m, display_moments):
         for WS in range(1, 5):  # SCHOOL_W_VALUES
           m.estimated.general_moments[row][WS - 1] = m.emp_m_kids[kids_n].mean(WS)
         row += 1
-      for kids_n in range(0, c.KIDS_SIZE):
+      for kids_n in range(0, 2):
         for WS in range(1, 5):  # SCHOOL_W_VALUES
           m.estimated.general_moments[row][WS - 1] = m.emp_um_kids[kids_n].mean(WS)
         row += 1
@@ -278,6 +307,7 @@ def calculate_moments(m, display_moments):
         m.estimated.general_moments[row][WS - 1] = m.newborn_m.mean(WS)
 
     if display_moments:
+
       up_down_mom_description = ["Married Up - Men's Ability",
                                  "Married Equal - Men's Ability",
                                  "Married Down - Men's Ability",
@@ -298,8 +328,13 @@ def calculate_moments(m, display_moments):
                                  "Emp of Married Down - Men's Wage Below",
                                  "# Kids for Married Women",
                                  "# Kids for Unmarried Women"]
-      print(np.concatenate((up_down_mom_description, m.up_down_moments), axis=1))
 
+      print("\nUp/Down Moments")
+      headers = ["Moment Name", "HSD", "HSG", "SC", "CG", "PC"]
+      table = tabulate(np.concatenate((np.array([up_down_mom_description]).T, m.up_down_moments.mean()), axis=1), headers, floatfmt=".2f", tablefmt="simple")
+      print(table)
+
+      print("\nBargaining Power and Consumption Share Distribution")
       dist_sum = np.sum(m.bp_initial_dist)
       print(m.bp_initial_dist / dist_sum)
       dist_sum = np.sum(m.bp_dist)
@@ -307,24 +342,27 @@ def calculate_moments(m, display_moments):
       dist_sum = np.sum(m.cs_dist)
       print(m.cs_dist / dist_sum)
 
-      print("Wage Moments - Married Women")
-      print(np.concatenate((m.estimated.wage_moments[:, 0:4], m.wage_moments[:, 0:4]), axis=1))
-      print("Wage Moments - Married Men")
-      print(np.concatenate((m.estimated.wage_moments[:, 4:9], m.wage_moments[:, 4:9]), axis=1))
+      print("\nWage Moments - Married Women")
+      headers = ["HSD", "HSG", "SC", "CG", "PC", "HSD", "HSG", "SC", "CG", "PC",]
+      table = tabulate(np.concatenate((m.estimated.wage_moments[:, 0:4], m.actual.wage_moments[:, 0:4]), axis=1), headers, floatfmt=".2f", tablefmt="simple")
+      print(table)
+      print("\nWage Moments - Married Men")
+      table = tabulate(np.concatenate((m.estimated.wage_moments[:, 4:9], m.actual.wage_moments[:, 4:9]), axis=1), headers, floatfmt=".2f", tablefmt="simple")
+      print(table)
 
-      print("Employment Moments - Total Women")
-      print(np.concatenate((m.estimated.emp_moments[:, 0:4], m.emp_moments[:, 0:4]), axis=1))
-      print("Employment Moments - Married Women")
-      print(np.concatenate((m.estimated.emp_moments[:, 4:8], m.emp_moments[:, 4:8]), axis=1))
-      print("Employment Moments - Unmarried Women")
-      print(np.concatenate((m.estimated.emp_moments[:, 8:12], m.emp_moments[:, 8:12]), axis=1))
+      print("\nEmployment Moments - Total Women")
+      print(np.concatenate((m.estimated.emp_moments[:, 0:4], m.actual.emp_moments[:, 0:4]), axis=1))
+      print("\nEmployment Moments - Married Women")
+      print(np.concatenate((m.estimated.emp_moments[:, 4:8], m.actual.emp_moments[:, 4:8]), axis=1))
+      print("\nEmployment Moments - Unmarried Women")
+      print(np.concatenate((m.estimated.emp_moments[:, 8:12], m.actual.emp_moments[:, 8:12]), axis=1))
 
-      print("Marriage Rate")
-      print(np.concatenate((m.estimated.mar_fer_moments[:, 0:4], m.mar_fer_moments[:, 0:4]), axis=1))
-      print("Fertility Rate")
-      print(np.concatenate((m.estimated.mar_fer_moments[:, 4:8], m.mar_fer_moments[:, 4:8]), axis=1))
-      print("Divorce Rate")
-      print(np.concatenate((m.estimated.mar_fer_moments[:, 8:12], m.mar_fer_moments[:, 8:12]), axis=1))
+      print("\nMarriage Rate")
+      print(np.concatenate((m.estimated.marr_fer_moments[:, 0:4], m.actual.marr_fer_moments[:, 0:4]), axis=1))
+      print("\nFertility Rate")
+      print(np.concatenate((m.estimated.marr_fer_moments[:, 4:8], m.actual.marr_fer_moments[:, 4:8]), axis=1))
+      print("\nDivorce Rate")
+      print(np.concatenate((m.estimated.marr_fer_moments[:, 8:12], m.actual.marr_fer_moments[:, 8:12]), axis=1))
       gen_mom_description = ["Assortative Mating - HSD",
                              "Assortative Mating - HSG",
                              "Assortative Mating - SC",
@@ -356,6 +394,9 @@ def calculate_moments(m, display_moments):
                              "Married->Unmarried",
                              "Birth Rate - Married",
                              "Birth Rate - Unarried"]
-      print(np.concatenate((gen_mom_description, m.estimated.general_moments, m.general_moments), axis=1))
+      print("\n")
+      headers = ["Moment Name", "HSG", "SC", "CG", "PC", "HSG", "SC", "CG", "PC", ]
+      table = tabulate(np.concatenate((np.array([gen_mom_description]).T, m.estimated.general_moments, m.actual.general_moments), axis=1), headers, floatfmt=".2f", tablefmt="simple")
+      print(table)
 
-      return m.estimated
+      return m
