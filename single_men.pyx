@@ -7,11 +7,16 @@ cimport draw_husband
 cimport draw_wife
 cimport calculate_wage
 cimport calculate_utility
-cimport marriage_emp_decision
+from marriage_emp_decision cimport marriage_emp_decision
 cimport nash
 
 
 def single_men(school_group, t, w_emax, h_emax, w_s_emax, h_s_emax, adjust_bp, verbose):
+
+  cdef int M = c.UNMARRIED
+  cdef int max_weighted_utility_index = 0
+  cdef double outside_option_h_v = float('-inf')
+
   if verbose:
     print("====================== single men: ", school_group, t, "  ======================")
 
@@ -53,14 +58,14 @@ def single_men(school_group, t, w_emax, h_emax, w_s_emax, h_s_emax, adjust_bp, v
 
       if bp != c.NO_BP:
         # marriage decision
-        decision = marriage_emp_decision.marriage_emp_decision(utility, bp, wife, husband, adjust_bp)
-        if decision.M == c.MARRIED:
-          sum += utility.husband[decision.max_weighted_utility_index]
+        M, max_weighted_utility_index, _, outside_option_h_v, _ = marriage_emp_decision(utility, bp, wife, husband, adjust_bp)
+        if M == c.MARRIED:
+          sum += utility.husband[max_weighted_utility_index]
           if verbose:
             print("got married")
         else:
-          sum += decision.outside_option_h_v
-          assert(decision.outside_option_h_v == utility.husband_s)
+          sum += outside_option_h_v
+          assert(outside_option_h_v == utility.husband_s)
           if verbose:
             print("did not get married")
       else:

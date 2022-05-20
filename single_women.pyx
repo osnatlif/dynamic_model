@@ -8,7 +8,7 @@ cimport draw_wife
 cimport calculate_wage
 cimport calculate_utility
 cimport nash
-cimport marriage_emp_decision
+from marriage_emp_decision cimport marriage_emp_decision
 
 
 def single_women(school_group, t, w_m_emax, h_m_emax, w_s_emax, h_s_emax, adjust_bp, verbose):
@@ -54,13 +54,13 @@ def single_women(school_group, t, w_m_emax, h_m_emax, w_s_emax, h_s_emax, adjust
                             print(wife)
                         if bp != c.NO_BP:
                             # marriage decision
-                            decision = marriage_emp_decision.marriage_emp_decision(utility, bp, wife, husband, adjust_bp)
-                            if decision.M == c.MARRIED:
-                                sum += utility.wife[decision.max_weighted_utility_index]
+                            M, max_weighted_utility_index, outside_option_w_v, outside_option_h_v, outside_option_w = marriage_emp_decision(utility, bp, wife, husband, adjust_bp)
+                            if M == c.MARRIED:
+                                sum += utility.wife[max_weighted_utility_index]
                                 if verbose:
                                     print("got married")
                             else:
-                                sum += decision.outside_option_w_v
+                                sum += outside_option_w_v
                                 if verbose:
                                     print("did not get married")
                         else:

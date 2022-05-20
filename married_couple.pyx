@@ -5,7 +5,7 @@ cimport draw_husband
 cimport draw_wife
 from calculate_wage cimport calculate_wage_h, calculate_wage_w
 from calculate_utility cimport calculate_utility, Utility
-from marriage_emp_decision cimport marriage_emp_decision, MarriageEmpDecision
+from marriage_emp_decision cimport marriage_emp_decision
 
 cdef married_couple(
 		int WS,
@@ -34,7 +34,11 @@ cdef married_couple(
 	cdef int draw_b
 	cdef double w_sum
 	cdef double h_sum
-	cdef MarriageEmpDecision decision
+	cdef int M
+	cdef int max_weighted_utility_index
+	cdef double outside_option_w_v
+	cdef double outside_option_h_v
+	cdef double outside_option_w
 
 	cdef Utility utility = Utility()
 	for w_exp_i in range(0, c.EXP_SIZE):  # for each experience level: 5 levels - open loop of experience
@@ -78,14 +82,14 @@ cdef married_couple(
 											print(wife)
 											print(husband)
 										# marriage decision - outside option value wife
-										decision = marriage_emp_decision(utility, bp, wife, husband, adjust_bp)
-										if decision.M == c.MARRIED:
-											w_sum += utility.wife[decision.max_weighted_utility_index]
-											h_sum += utility.husband[decision.max_weighted_utility_index]
+										M, max_weighted_utility_index, outside_option_w_v, outside_option_h_v, outside_option_w = marriage_emp_decision(utility, bp, wife, husband, adjust_bp)
+										if M == c.MARRIED:
+											w_sum += utility.wife[max_weighted_utility_index]
+											h_sum += utility.husband[max_weighted_utility_index]
 											if verbose:
 												print("still married")
 										else:
-											w_sum += decision.outside_option_w_v
+											w_sum += outside_option_w_v
 											h_sum += utility.husband_s
 											if verbose:
 												print("got divorced")
