@@ -7,8 +7,6 @@ from Cython.Compiler import Options
 Options.buffer_max_dims = 11
 
 extensions = [
-        Extension("moments", ["moments.pyx"]),
-        Extension("forward_simulation", ["forward_simulation.pyx"]),
         Extension("single_men", ["single_men.pyx"]),
         Extension("single_women", ["single_women.pyx"]),
         Extension("married_couple", ["married_couple.pyx"]),

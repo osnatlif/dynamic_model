@@ -5,6 +5,12 @@ from draw_wife cimport Wife
 
 
 cdef class MarriageEmpDecision:
+  def get_M(self):
+    return self.M
+
+  def get_index(self):
+    return self.max_weighted_utility_index
+
   def __init__(self):
     self.M = c.UNMARRIED
     self.max_weighted_utility_index = 0
@@ -20,14 +26,14 @@ cdef class MarriageEmpDecision:
            "\n\tWife's Employment: " + str(self.outside_option_w)
 
 
-cdef int wife_emp_decision(Utility utility):       # single women only chooses employment (if she got an offer)
+cpdef int wife_emp_decision(Utility utility):       # single women only chooses employment (if she got an offer)
   if utility.U_W_S[c.UNEMP] > utility.U_W_S[c.EMP]:
     return c.UNEMP
   else:
     return c.EMP
 
 
-cdef MarriageEmpDecision marriage_emp_decision(Utility utility, double bp, Wife wife, Husband husband, int adjust_bp):
+cpdef MarriageEmpDecision marriage_emp_decision(Utility utility, double bp, Wife wife, Husband husband, int adjust_bp):
   cdef MarriageEmpDecision result = MarriageEmpDecision()
 
   if utility.wife_s[c.UNEMP] > utility.wife_s[c.EMP]:

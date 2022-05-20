@@ -34,7 +34,7 @@ cdef class Utility:
     self.husband_s = float('-inf')
 
 
-cdef Utility calculate_utility(
+cpdef Utility calculate_utility(
         double[:,:,:,:,:,:,:,:,:,:] w_emax,
         double[:,:,:,:,:,:,:,:,:,:]h_emax,
         double[:,:,:,:,:,:] w_s_emax,

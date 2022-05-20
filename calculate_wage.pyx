@@ -3,7 +3,7 @@ cimport parameters as p
 from draw_husband cimport Husband
 from draw_wife cimport Wife
 
-cdef double calculate_wage_h(Husband husband, double epsilon):
+cpdef double calculate_wage_h(Husband husband, double epsilon):
     cdef double tmp1
     cdef double tmp2
     cdef double wage
@@ -16,7 +16,7 @@ cdef double calculate_wage_h(Husband husband, double epsilon):
     return wage
 
 
-cdef double calculate_wage_w(Wife wife, double w_draw, double epsilon):
+cpdef double calculate_wage_w(Wife wife, double w_draw, double epsilon):
     # this function calculates wives actual wage
     cdef double prob_tmp = (p.row0_w*wife.emp_state + p.row11_w*wife.HSG + p.row12_w*wife.SC + p.row13_w*wife.CG + p.row14_w*wife.PC + p.row2_w*wife.WE)
     cdef double prob_w = cexp(prob_tmp)/(1+cexp(prob_tmp))

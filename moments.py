@@ -1,6 +1,6 @@
 import numpy as np
 from enum import Enum
-cimport constant_parameters as c
+import constant_parameters1 as c
 from tabulate import tabulate
 
 class Accumulator:
@@ -94,18 +94,20 @@ class UpDownMomentsType(Enum):
 
 WAGE_MOM_ROW = 36
 WAGE_MOM_COL = 10
-MARR_MOM_ROW = c.T_MAX
 MARR_MOM_COL = 13
-EMP_MOM_ROW = c.T_MAX
 EMP_MOM_COL = 13
 GEN_MOM_ROW = 31
-GEN_MOM_COL = c.SCHOOL_SIZE-1
 
 class EstimatedMoments:
-  emp_moments = np.zeros((EMP_MOM_ROW, EMP_MOM_COL))
-  marr_fer_moments = np.zeros((MARR_MOM_ROW, MARR_MOM_COL))
-  wage_moments = np.zeros((WAGE_MOM_ROW, WAGE_MOM_COL))
-  general_moments = np.zeros((GEN_MOM_ROW, GEN_MOM_COL))
+  emp_moments = np.zeros((c.T_MAX, 5))
+  emp_moments_m = np.zeros((c.T_MAX, 5))
+  emp_moments_um = np.zeros((c.T_MAX, 5))
+  marriage_moments = np.zeros((c.T_MAX, 5))
+  divorce_moments = np.zeros((c.T_MAX, 5))
+  fertility_moments = np.zeros((c.T_MAX, 5))
+  wage_moments_wife = np.zeros((WAGE_MOM_ROW, 5))
+  wage_moments_husband = np.zeros((WAGE_MOM_ROW, 6))
+  general_moments = np.zeros((GEN_MOM_ROW, 4))
 
 
 class ActualMoments:
@@ -152,8 +154,8 @@ class Moments:
   newborn_um = Accumulator((c.T_MAX, c.SCHOOL_SIZE))              # newborn in period t - for probability and distribution
   newborn_m = Accumulator((c.T_MAX, c.SCHOOL_SIZE))               # newborn in period t - for probability and distribution
   newborn_all = Accumulator((c.T_MAX, c.SCHOOL_SIZE))    # newborn in period t - for probability and distribution
-  duration_of_first_marriage = Accumulator(c.SCHOOL_SIZE)   # duration of marriage if divorce or c.W_SCHOOL_SIZEc.SCHOOL_SIZE-age of marriage if still married at 45
-  assortative_mating_hist  = np.zeros((c.SCHOOL_SIZE, c.SCHOOL_SIZE))    # husband education by wife education
+  duration_of_first_marriage = Accumulator(c.W_SCHOOL_SIZE)   # duration of marriage if divorce or c.W_SCHOOL_SIZEc.SCHOOL_SIZE-age of marriage if still married at 45
+  assortative_mating_hist  = np.zeros((c.SCHOOL_SIZE, c.W_SCHOOL_SIZE))    # husband education by wife education
   assortative_mating_count = np.zeros(c.SCHOOL_SIZE)
   count_just_married = np.zeros(c.SCHOOL_SIZE)
   count_just_divorced = np.zeros(c.SCHOOL_SIZE)
@@ -177,138 +179,123 @@ def mean(sum_moment, count_moment, school_group, t=None):
     return 0
   return sum_moment[t][school_group]/count_moment[t][school_group]
 
-
 def calculate_moments(m, display_moments):
   # calculate employment moments
   for t in range(0, c.T_MAX):
     m.estimated.emp_moments[t][0] = t + 18
-    offset = 1
-    for school_group in range(1, 5):  # SCHOOL_W_VALUES
-      m.estimated.emp_moments[t][offset] = mean(m.emp_total, m.count_emp_total, school_group, t)
-      offset += 1
-    for school_group in range(1, 5):  #SCHOOL_W_VALUES
-      m.estimated.emp_moments[t][offset] = mean(m.emp_m, m.married, school_group, t)
-      offset += 1
-    for school_group in range(1, 5):  #SCHOOL_W_VALUES
+    m.estimated.emp_moments_m[t][0] = t + 18
+    m.estimated.emp_moments_um[t][0] = t + 18
+    m.estimated.marriage_moments[t][0] = t + 18
+    m.estimated.divorce_moments[t][0] = t + 18
+    m.estimated.fertility_moments[t][0] = t + 18
+    m.estimated.wage_moments_wife[t][0] = t + 18
+    m.estimated.wage_moments_husband[t][0] = t + 18
+    for school_group in range(1, 5):  # this loop goes from 1 to 4 - SCHOOL_W_VALUES
+      # calculate employment estimated moments: total women employment, married women's employment and unmarried women's employment
+      m.estimated.emp_moments[t][school_group] = mean(m.emp_total, m.count_emp_total, school_group, t)
+      m.estimated.emp_moments_m[t][school_group] = mean(m.emp_m, m.married, school_group, t)
       unmarried = c.DRAW_F - m.married[t][school_group]
       if unmarried == 0:
-        m.estimated.emp_moments[t][offset] = 0.0
+        m.estimated.emp_moments_um[t][school_group] = 0.0
       else:
-        m.estimated.emp_moments[t][offset] = m.emp_um[t][school_group] / unmarried
-      offset += 1
+        m.estimated.emp_moments_um[t][school_group] = m.emp_um[t][school_group] / unmarried
+      # calculate marriage/fertility moments
+      m.estimated.marriage_moments[t][school_group] = m.married[t][school_group] / c.DRAW_F
+      m.estimated.fertility_moments[t][school_group] = m.newborn_all.mean(t, school_group)
+      m.estimated.divorce_moments[t][school_group] = m.divorce[t][school_group] / c.DRAW_F
+      # calculate women's wage moments
+      m.estimated.wage_moments_wife[t][school_group] = m.wages_m_h.mean(t, school_group)
+    for HS in range(1, 6):  # this loop goes from 1 to 5 - SCHOOL_H_VALUES
+        m.estimated.wage_moments_husband[t][HS] = m.wages_w.mean(t, HS-1)
 
-    # calculate marriage/fertility moments
-    for t in range(0, c.T_MAX):
-      m.estimated.marr_fer_moments[t][0] = t + 18
-      offset = 1
-      for school_group in range(1, 4):  #SCHOOL_W_VALUES
-        m.estimated.marr_fer_moments[t][offset] = m.married[t][school_group] / c.DRAW_F
-        offset += 1
-      for school_group in range(1, 4):  # SCHOOL_W_VALUES
-        m.estimated.marr_fer_moments[t][offset] = m.newborn_all.mean(t, school_group)
-        offset += 1
-      for school_group in range(1, 4):  #SCHOOL_W_VALUES
-        m.estimated.marr_fer_moments[t][offset] = m.divorce[t][school_group] / c.DRAW_F
-        offset += 1
+    # calculate general moments
+    # assortative mating
+    row = 0
+    for HS in range(0, 5):  # this loop goes from 1 to 5 - SCHOOL_H_VALUES
+      count = m.assortative_mating_count[HS]
+      for WS in range(0, 4):  # tis loop goes from 1 to 4 - SCHOOL_W_VALUES
+        if count == 0:
+          m.estimated.general_moments[row][WS] = 0.0
+        else:
+          m.estimated.general_moments[row][WS] = m.assortative_mating_hist[HS][WS] / count
+      row += 1
+    # first marriage duration
+    for WS in range(0, 4):  # SCHOOL_W_VALUES
+      m.estimated.general_moments[row][WS] = m.duration_of_first_marriage.mean(WS)
+    row += 1
+    # age at first marriage
+    for WS in range(1, 4):  # SCHOOL_W_VALUES
+      m.estimated.general_moments[row][WS - 1] = m.age_at_first_marriage.mean(WS)
+    row += 1
+    # kids
+    for WS in range(1, 5):  # SCHOOL_W_VALUES
+      m.estimated.general_moments[row][WS - 1] = m.n_kids_arr.mean(WS)
+    row += 1
+    # women wage by match: UP, EQUAL, DOWN
+    for WS in range(1, 5):  # SCHOOL_W_VALUES
+      m.estimated.general_moments[row][WS - 1] = m.wages_m_w_up.mean(WS)
+    row += 1
+    for WS in range(1, 5):  # SCHOOL_W_VALUES
+      m.estimated.general_moments[row][WS - 1] = m.wages_m_w_eq.mean(WS)
+    row += 1
+    for WS in range(1, 5):  # SCHOOL_W_VALUES
+      m.estimated.general_moments[row][WS - 1] = m.wages_m_w_down.mean(WS)
+    row += 1
+    # employment by match: UP, EQUAL, DOWN
+    for WS in range(1, 5):  # SCHOOL_W_VALUES
+      m.estimated.general_moments[row][WS - 1] = m.emp_m_up.mean(WS)
+    row += 1
+    for WS in range(1, 5):  # SCHOOL_W_VALUES
+      m.estimated.general_moments[row][WS - 1] = m.emp_m_eq.mean(WS)
+    row += 1
+    for WS in range(1, 5):  # SCHOOL_W_VALUES
+      m.estimated.general_moments[row][WS - 1] = m.emp_m_down.mean(WS)
+    row += 1
+    # employment by children: married with 0 - 4+ kids, unmarried with kids, unmarried with no kids
+    for kids_n in range(0, c.KIDS_SIZE):
+      for WS in range(1, 5):  # SCHOOL_W_VALUES
+        m.estimated.general_moments[row][WS - 1] = m.emp_m_kids[kids_n].mean(WS)
+      row += 1
+    for kids_n in range(0, 2):
+      for WS in range(1, 5):  # SCHOOL_W_VALUES
+        m.estimated.general_moments[row][WS - 1] = m.emp_um_kids[kids_n].mean(WS)
+      row += 1
+    # employment transition matrix:
+    for WS in range(1, 5):  # SCHOOL_W_VALUES
+      m.estimated.general_moments[row][WS - 1] = mean(m.just_got_fired_m, m.count_just_got_fired_m, WS)
+    row += 1
+    for WS in range(1, 5):  # SCHOOL_W_VALUES
+      m.estimated.general_moments[row][WS - 1] = mean(m.just_found_job_m, m.count_just_found_job_m, WS)
+    row += 1
+    for WS in range(1, 5):  # SCHOOL_W_VALUES
+      m.estimated.general_moments[row][WS - 1] = mean(m.just_got_fired_um, m.count_just_got_fired_um, WS)
+    row += 1
+    for WS in range(1, 5):  # SCHOOL_W_VALUES
+      m.estimated.general_moments[row][WS - 1] = mean(m.just_found_job_um, m.count_just_found_job_um, WS)
+    row += 1
+    for WS in range(1, 5):  # SCHOOL_W_VALUES
+      m.estimated.general_moments[row][WS - 1] = mean(m.just_got_fired_mc, m.count_just_got_fired_mc, WS)
+    row += 1
+    for WS in range(1, 5):  # SCHOOL_W_VALUES
+      m.estimated.general_moments[row][WS - 1] = mean(m.just_found_job_mc, m.count_just_found_job_mc, WS)
+    row += 1
+    # marriage transition matrix
+    for WS in range(1, 5):  # SCHOOL_W_VALUES
+      m.estimated.general_moments[row][WS - 1] = mean(m.just_married, m.count_just_married, WS)
+    row += 1
+    for WS in range(1, 5):  # SCHOOL_W_VALUES
+      m.estimated.general_moments[row][WS - 1] = mean(m.just_divorced, m.count_just_divorced, WS)
+    row += 1
+    # birth rate unmarried and married
+    for WS in range(1, 5):  # SCHOOL_W_VALUES
+      m.estimated.general_moments[row][WS - 1] = m.newborn_um.mean(WS)
+    row += 1
+    for WS in range(1, 5):  # SCHOOL_W_VALUES
+     m.estimated.general_moments[row][WS - 1] = m.newborn_m.mean(WS)
 
-    # calculate wage moments
-    for t in range(0, c.T_MAX):
-      m.estimated.wage_moments[t][0] = t
-      offset = 1
-      for WS in range(1, 5):  # SCHOOL_W_VALUES
-        m.estimated.wage_moments[t][offset] = m.wages_w.mean(t, WS)
-        offset += 1
-      for HS in range(0, 5):  # SCHOOL_H_VALUES
-        m.estimated.wage_moments[t][offset] = m.wages_m_h.mean(t, HS)
-        offset += 1
-      # calculate general moments
-      # assortative mating
-      row = 0
-      for HS in range(0, 5):  # SCHOOL_H_VALUES
-        count = m.assortative_mating_count[HS]
-        for WS in range(1, 5):  # SCHOOL_W_VALUES
-          if count == 0:
-            m.estimated.general_moments[row][WS - 1] = 0.0
-          else:
-            m.estimated.general_moments[row][WS - 1] = m.assortative_mating_hist[WS][HS] / count
-        row += 1
-      # first marriage duration
-      for WS in range(1, 5):  # SCHOOL_W_VALUES
-        m.estimated.general_moments[row][WS - 1] = m.duration_of_first_marriage.mean(WS)
-      row += 1
-      # age at first marriage
-      for WS in range(1, 5):  # SCHOOL_W_VALUES
-        m.estimated.general_moments[row][WS - 1] = m.age_at_first_marriage.mean(WS)
-      row += 1
-      # kids
-      for WS in range(1, 5):  # SCHOOL_W_VALUES
-        m.estimated.general_moments[row][WS - 1] = m.n_kids_arr.mean(WS)
-      row += 1
-      # women wage by match: UP, EQUAL, DOWN
-      for WS in range(1, 5):  # SCHOOL_W_VALUES
-        m.estimated.general_moments[row][WS - 1] = m.wages_m_w_up.mean(WS)
-      row += 1
-      for WS in range(1, 5):  # SCHOOL_W_VALUES
-        m.estimated.general_moments[row][WS - 1] = m.wages_m_w_eq.mean(WS)
-      row += 1
-      for WS in range(1, 5):  # SCHOOL_W_VALUES
-        m.estimated.general_moments[row][WS - 1] = m.wages_m_w_down.mean(WS)
-      row += 1
-      # employment by match: UP, EQUAL, DOWN
-      for WS in range(1, 5):  # SCHOOL_W_VALUES
-        m.estimated.general_moments[row][WS - 1] = m.emp_m_up.mean(WS)
-      row += 1
-      for WS in range(1, 5):  # SCHOOL_W_VALUES
-        m.estimated.general_moments[row][WS - 1] = m.emp_m_eq.mean(WS)
-      row += 1
-      for WS in range(1, 5):  # SCHOOL_W_VALUES
-        m.estimated.general_moments[row][WS - 1] = m.emp_m_down.mean(WS)
-      row += 1
-      # employment by children: married with 0 - 4+ kids, unmarried with kids, unmarried with no kids
-      for kids_n in range(0, c.KIDS_SIZE):
-        for WS in range(1, 5):  # SCHOOL_W_VALUES
-          m.estimated.general_moments[row][WS - 1] = m.emp_m_kids[kids_n].mean(WS)
-        row += 1
-      for kids_n in range(0, 2):
-        for WS in range(1, 5):  # SCHOOL_W_VALUES
-          m.estimated.general_moments[row][WS - 1] = m.emp_um_kids[kids_n].mean(WS)
-        row += 1
-      # employment transition matrix:
-      for WS in range(1, 5):  # SCHOOL_W_VALUES
-        m.estimated.general_moments[row][WS - 1] = mean(m.just_got_fired_m, m.count_just_got_fired_m, WS)
-      row += 1
-      for WS in range(1, 5):  # SCHOOL_W_VALUES
-        m.estimated.general_moments[row][WS - 1] = mean(m.just_found_job_m, m.count_just_found_job_m, WS)
-      row += 1
-      for WS in range(1, 5):  # SCHOOL_W_VALUES
-        m.estimated.general_moments[row][WS - 1] = mean(m.just_got_fired_um, m.count_just_got_fired_um, WS)
-      row += 1
-      for WS in range(1, 5):  # SCHOOL_W_VALUES
-        m.estimated.general_moments[row][WS - 1] = mean(m.just_found_job_um, m.count_just_found_job_um, WS)
-      row += 1
-      for WS in range(1, 5):  # SCHOOL_W_VALUES
-        m.estimated.general_moments[row][WS - 1] = mean(m.just_got_fired_mc, m.count_just_got_fired_mc, WS)
-      row += 1
-      for WS in range(1, 5):  # SCHOOL_W_VALUES
-        m.estimated.general_moments[row][WS - 1] = mean(m.just_found_job_mc, m.count_just_found_job_mc, WS)
-      row += 1
-      # marriage transition matrix
-      for WS in range(1, 5):  # SCHOOL_W_VALUES
-        m.estimated.general_moments[row][WS - 1] = mean(m.just_married, m.count_just_married, WS)
-      row += 1
-      for WS in range(1, 5):  # SCHOOL_W_VALUES
-        m.estimated.general_moments[row][WS - 1] = mean(m.just_divorced, m.count_just_divorced, WS)
-      row += 1
-      # birth rate unmarried and married
-      for WS in range(1, 5):  # SCHOOL_W_VALUES
-        m.estimated.general_moments[row][WS - 1] = m.newborn_um.mean(WS)
-      row += 1
-      for WS in range(1, 5):  # SCHOOL_W_VALUES
-        m.estimated.general_moments[row][WS - 1] = m.newborn_m.mean(WS)
+  if display_moments:
 
-    if display_moments:
-
-      up_down_mom_description = ["Married Up - Men's Ability",
+    up_down_mom_description = ["Married Up - Men's Ability",
                                  "Married Equal - Men's Ability",
                                  "Married Down - Men's Ability",
                                  "Married Up - Women's Ability",
@@ -329,41 +316,46 @@ def calculate_moments(m, display_moments):
                                  "# Kids for Married Women",
                                  "# Kids for Unmarried Women"]
 
-      print("\nUp/Down Moments")
-      headers = ["Moment Name", "HSD", "HSG", "SC", "CG", "PC"]
-      table = tabulate(np.concatenate((np.array([up_down_mom_description]).T, m.up_down_moments.mean()), axis=1), headers, floatfmt=".2f", tablefmt="simple")
-      print(table)
+    print("\nUp/Down Moments")
+    headers = ["Moment Name", "HSD", "HSG", "SC", "CG", "PC"]
+    table = tabulate(np.concatenate((np.array([up_down_mom_description]).T, m.up_down_moments.mean()), axis=1), headers, floatfmt=".2f", tablefmt="simple")
+    print(table)
 
-      print("\nBargaining Power and Consumption Share Distribution")
-      dist_sum = np.sum(m.bp_initial_dist)
-      print(m.bp_initial_dist / dist_sum)
-      dist_sum = np.sum(m.bp_dist)
-      print(m.bp_dist / dist_sum)
-      dist_sum = np.sum(m.cs_dist)
-      print(m.cs_dist / dist_sum)
+    print("\nBargaining Power and Consumption Share Distribution")
+    dist_sum = np.sum(m.bp_initial_dist)
+    print(m.bp_initial_dist / dist_sum)
+    dist_sum = np.sum(m.bp_dist)
+    print(m.bp_dist / dist_sum)
+    dist_sum = np.sum(m.cs_dist)
+    print(m.cs_dist / dist_sum)
 
-      print("\nWage Moments - Married Women")
-      headers = ["HSD", "HSG", "SC", "CG", "PC", "HSD", "HSG", "SC", "CG", "PC",]
-      table = tabulate(np.concatenate((m.estimated.wage_moments[:, 0:4], m.actual.wage_moments[:, 0:4]), axis=1), headers, floatfmt=".2f", tablefmt="simple")
-      print(table)
-      print("\nWage Moments - Married Men")
-      table = tabulate(np.concatenate((m.estimated.wage_moments[:, 4:9], m.actual.wage_moments[:, 4:9]), axis=1), headers, floatfmt=".2f", tablefmt="simple")
-      print(table)
-
-      print("\nEmployment Moments - Total Women")
-      print(np.concatenate((m.estimated.emp_moments[:, 0:4], m.actual.emp_moments[:, 0:4]), axis=1))
-      print("\nEmployment Moments - Married Women")
-      print(np.concatenate((m.estimated.emp_moments[:, 4:8], m.actual.emp_moments[:, 4:8]), axis=1))
-      print("\nEmployment Moments - Unmarried Women")
-      print(np.concatenate((m.estimated.emp_moments[:, 8:12], m.actual.emp_moments[:, 8:12]), axis=1))
-
-      print("\nMarriage Rate")
-      print(np.concatenate((m.estimated.marr_fer_moments[:, 0:4], m.actual.marr_fer_moments[:, 0:4]), axis=1))
-      print("\nFertility Rate")
-      print(np.concatenate((m.estimated.marr_fer_moments[:, 4:8], m.actual.marr_fer_moments[:, 4:8]), axis=1))
-      print("\nDivorce Rate")
-      print(np.concatenate((m.estimated.marr_fer_moments[:, 8:12], m.actual.marr_fer_moments[:, 8:12]), axis=1))
-      gen_mom_description = ["Assortative Mating - HSD",
+    print("\nWage Moments - Married Men")
+    headers = ["Age", "HSD", "HSG", "SC", "CG", "PC", "HSD", "HSG", "SC", "CG", "PC",]
+    table = tabulate(np.concatenate((m.estimated.wage_moments_husband[:, 0:6], m.actual.wage_moments[:, 5:10]), axis=1), headers, floatfmt=".2f", tablefmt="simple")
+    print(table)
+    print("\nWage Moments - Married Women")
+    headers = [ "HSG", "SC", "CG", "PC",  "HSG", "SC", "CG", "PC",]
+    table = tabulate(np.concatenate((m.estimated.wage_moments_wife[:, 0:5], m.actual.wage_moments[:, 1:5]), axis=1), headers, floatfmt=".2f", tablefmt="simple")
+    print(table)
+    print("\nEmployment Moments - Total Women")
+    table = tabulate(np.concatenate((m.estimated.emp_moments[:, 0:5], m.actual.emp_moments[:, 1:5]), axis=1), headers, floatfmt=".2f", tablefmt="simple")
+    print(table)
+    print("\nEmployment Moments - Married Women")
+    table = tabulate(np.concatenate((m.estimated.emp_moments_m[:, 0:5], m.actual.emp_moments[:, 5:9]), axis=1), headers, floatfmt=".2f", tablefmt="simple")
+    print(table)
+    print("\nEmployment Moments - Unmarried Women")
+    table = tabulate(np.concatenate((m.estimated.emp_moments_um[:, 0:5], m.actual.emp_moments[:, 9:13]), axis=1), headers, floatfmt=".2f", tablefmt="simple")
+    print(table)
+    print("\nMarriage Rate")
+    table = tabulate(np.concatenate((m.estimated.marriage_moments[:, 0:5], m.actual.marr_fer_moments[:, 0:5]), axis=1), headers, floatfmt=".2f", tablefmt="simple")
+    print(table)
+    print("\nFertility Rate")
+    table = tabulate(np.concatenate((m.estimated.fertility_moments[:, 0:5], m.actual.marr_fer_moments[:, 5:9]), axis=1), headers, floatfmt=".2f", tablefmt="simple")
+    print(table)
+    print("\nDivorce Rate")
+    table = tabulate(np.concatenate((m.estimated.divorce_moments[:, 0:5], m.actual.marr_fer_moments[:, 9:13]), axis=1), headers, floatfmt=".2f", tablefmt="simple")
+    print(table)
+    gen_mom_description = ["Assortative Mating - HSD",
                              "Assortative Mating - HSG",
                              "Assortative Mating - SC",
                              "Assortative Mating - CG",
@@ -393,10 +385,10 @@ def calculate_moments(m, display_moments):
                              "Unmarried->Married",
                              "Married->Unmarried",
                              "Birth Rate - Married",
-                             "Birth Rate - Unarried"]
-      print("\n")
-      headers = ["Moment Name", "HSG", "SC", "CG", "PC", "HSG", "SC", "CG", "PC", ]
-      table = tabulate(np.concatenate((np.array([gen_mom_description]).T, m.estimated.general_moments, m.actual.general_moments), axis=1), headers, floatfmt=".2f", tablefmt="simple")
-      print(table)
+                             "Birth Rate - Unmarried"]
+    print("\n")
+    headers = ["Moment Name", "HSG", "SC", "CG", "PC", "HSG", "SC", "CG", "PC", ]
+    table = tabulate(np.concatenate((np.array([gen_mom_description]).T, m.estimated.general_moments, m.actual.general_moments), axis=1), headers, floatfmt=".2f", tablefmt="simple")
+    print(table)
 
-      return m
+  return m

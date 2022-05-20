@@ -10,8 +10,26 @@ cdef class Wife:
   def set_emp_state(self, state):
     self.emp_state = state
 
+  def set_Q(self, Q):
+    self.Q = Q
+
+  def set_Q_index(self, Q_INDEX):
+    self.Q_INDEX = Q_INDEX
+
+  def get_Q(self):
+    return self.Q
+
+  def get_Q_INDEX(self):
+    return self.Q_INDEX
+
+  def get_emp_state(self):
+    return self.emp_state
+
   def get_T_END(self):
     return self.T_END
+
+  def get_AGE(self):
+    return self.AGE
 
   def __init__(self):
     # following are indicators for the wife's schooling they have values of 0/1 and only one of them could be 1
@@ -39,7 +57,7 @@ cdef class Wife:
            "\n\tAge: " + str(self.AGE) + "\n\tAge Index: " + str(self.age_index) + "\n\tLast Period: " + str(self.T_END)
 
 
-cdef int update_wife_schooling(int school_group, int t, Wife wife):
+cpdef int update_wife_schooling(int school_group, int t, Wife wife):
   # T_END is used together with the t index which get values 0-26
   wife.WS = school_group
   wife.AGE = c.AGE_VALUES[wife.WS] + t
@@ -73,12 +91,12 @@ cdef int update_wife_schooling(int school_group, int t, Wife wife):
   return 1
 
 
-cdef update_ability(int ability, Wife wife):
+cpdef update_ability(int ability, Wife wife):
   wife.ability_wi = ability
   wife.ability_w_value = c.normal_arr[ability]*p.sigma3
 
 
-cdef Wife draw_wife(int t, int age_index, int HS):
+cpdef Wife draw_wife(int t, int age_index, int HS):
   cdef Wife result = Wife()
   result.Q_INDEX = np.random.randint(0, 2)
   result.Q = c.normal_arr[result.Q_INDEX]*p.sigma4

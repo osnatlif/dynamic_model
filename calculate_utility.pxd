@@ -12,7 +12,7 @@ cdef class Utility:
 
 # calculate_utility function
 # return Utility class
-cdef Utility calculate_utility(
+cpdef Utility calculate_utility(
         double[:,:,:,:,:,:,:,:,:,:] w_emax,
         double[:,:,:,:,:,:,:,:,:,:] h_emax,
         double[:,:,:,:,:,:] w_s_emax,

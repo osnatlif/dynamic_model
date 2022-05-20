@@ -29,7 +29,7 @@ cdef class Husband:
                                      "\n\tAge: " + str(self.AGE) + "\n\tAge Index: " + str(self.age_index) + "\n\tLast Period: " + str(self.T_END)
 
 
-cdef int update_school_and_age(int school_group, int t, Husband husband):   # used only for calculating the EMAX of single men - Backward
+cpdef int update_school_and_age(int school_group, int t, Husband husband):   # used only for calculating the EMAX of single men - Backward
   husband.AGE = c.AGE_VALUES[school_group] + t
   husband.age_index = c.AGE_INDEX_VALUES[school_group]         # AGE_INDEX_VALUES = [0, 0, 2, 4, 7]
   husband.T_END = c.TERMINAL - c.AGE_VALUES[school_group] - 1  # AGE_VALUES = [18, 18, 20, 22, 25]
@@ -43,7 +43,7 @@ cdef int update_school_and_age(int school_group, int t, Husband husband):   # us
   return 1
 
 
-cdef update_school_and_age_f(Wife wife, Husband husband):     # used only for forward solution - when wife draw a partner
+cpdef update_school_and_age_f(Wife wife, Husband husband):     # used only for forward solution - when wife draw a partner
   husband.AGE = wife.AGE
   husband.age_index = wife.age_index         # AGE_INDEX_VALUES = [0, 0, 2, 4, 7]
   husband.T_END = wife.T_END                    # AGE_VALUES = [18, 18, 20, 22, 25]
@@ -54,7 +54,7 @@ cdef update_school_and_age_f(Wife wife, Husband husband):     # used only for fo
   update_school(husband)
 
 
-cdef update_school(Husband husband):         # this function update education in Husnabds structures
+cpdef update_school(Husband husband):         # this function update education in Husnabds structures
   if husband.HS == 0:
     husband.H_HSD = 1
     husband.H_HSG = 0
@@ -89,7 +89,7 @@ cdef update_school(Husband husband):         # this function update education in
     assert False
 
 
-cdef Husband draw_husband(int t, Wife wife, int forward):
+cpdef Husband draw_husband(int t, Wife wife, int forward):
   cdef Husband result = Husband()
   result.ability_hi = np.random.randint(0, 2)                                           # draw ability index
   result.ability_h_value = c.normal_arr[result.ability_hi] * p.sigma3   # calculate ability value

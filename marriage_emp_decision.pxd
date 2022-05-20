@@ -9,6 +9,6 @@ cdef class MarriageEmpDecision:
   cdef double outside_option_h_v
   cdef double outside_option_w
 
-cdef int wife_emp_decision(Utility utility)
+cpdef int wife_emp_decision(Utility utility)
 
-cdef MarriageEmpDecision marriage_emp_decision(Utility utility, double bp, Wife wife, Husband husband, int adjust_bp)
+cpdef MarriageEmpDecision marriage_emp_decision(Utility utility, double bp, Wife wife, Husband husband, int adjust_bp)
