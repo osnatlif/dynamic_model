@@ -41,10 +41,10 @@ cdef married_couple(
 		base_wife.WE = c.exp_vector[w_exp_i]
 		for ability_wi in range(0, c.ABILITY_SIZE):  # for each ability level: low, medium, high - open loop of ability
 			base_wife.ability_wi = ability_wi
-			base_wife.ability_w_value = c.normal_arr[ability_wi] * p.sigma3  # wife ability - low, medium, high
+			base_wife.ability_w_value = c.normal_vector[ability_wi] * p.sigma3  # wife ability - low, medium, high
 			for ability_hi in range(0, c.ABILITY_SIZE):  # for each ability level: low, medium, high - open loop of ability
 				base_husband.ability_hi = ability_hi
-				base_husband.ability_h_value = c.normal_arr[ability_hi] * p.sigma3  # wife ability - low, medium, high
+				base_husband.ability_h_value = c.normal_vector[ability_hi] * p.sigma3  # wife ability - low, medium, high
 				for kids in range(0, c.KIDS_SIZE):  # for each number of kids: 0, 1, 2,  - open loop of kids
 					for prev_emp_state in range(0, c.WORK_SIZE):  # two options: employed and unemployed
 						base_wife.emp_state = prev_emp_state
@@ -58,7 +58,7 @@ cdef married_couple(
 							if HS == WS:
 								base_wife.similar_educ = p.EDUC_MATCH[WS]
 							for Q_INDEX in range(0, c.MATCH_Q_SIZE):        # MATCH_Q_VALUES: 0,1,2
-								base_wife.Q = c.normal_arr[Q_INDEX]*p.sigma4
+								base_wife.Q = c.normal_vector[Q_INDEX]*p.sigma4
 								base_wife.Q_INDEX = Q_INDEX
 								for bpi in range(0, c.BP_SIZE):
 									bp = c.BP_W_VALUES[bpi]

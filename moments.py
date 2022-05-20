@@ -1,7 +1,13 @@
 import numpy as np
 from enum import Enum
-import constant_parameters1 as c
+import constant_parameters as c
 from tabulate import tabulate
+
+SCHOOL_SIZE = c.F_SCHOOL_SIZE
+W_SCHOOL_SIZE = c.F_W_SCHOOL_SIZE
+KIDS_SIZE = c.F_KIDS_SIZE
+T_MAX = c.F_T_MAX
+CS_SIZE = c.F_CS_SIZE
 
 class Accumulator:
   def __init__(self, dim1, dim2=None):
@@ -93,21 +99,21 @@ class UpDownMomentsType(Enum):
 
 
 WAGE_MOM_ROW = 36
-WAGE_MOM_COL = 10
-MARR_MOM_COL = 13
-EMP_MOM_COL = 13
 GEN_MOM_ROW = 31
+# schooling + age
+W_EMP_MOMENTS_COL = W_SCHOOL_SIZE + 1
+H_EMP_MOMENTS_COL = SCHOOL_SIZE + 1
 
 class EstimatedMoments:
-  emp_moments = np.zeros((c.T_MAX, 5))
-  emp_moments_m = np.zeros((c.T_MAX, 5))
-  emp_moments_um = np.zeros((c.T_MAX, 5))
-  marriage_moments = np.zeros((c.T_MAX, 5))
-  divorce_moments = np.zeros((c.T_MAX, 5))
-  fertility_moments = np.zeros((c.T_MAX, 5))
-  wage_moments_wife = np.zeros((WAGE_MOM_ROW, 5))
-  wage_moments_husband = np.zeros((WAGE_MOM_ROW, 6))
-  general_moments = np.zeros((GEN_MOM_ROW, 4))
+  emp_moments = np.zeros((T_MAX, W_EMP_MOMENTS_COL))
+  emp_moments_m = np.zeros((T_MAX, W_EMP_MOMENTS_COL))
+  emp_moments_um = np.zeros((T_MAX, W_EMP_MOMENTS_COL))
+  marriage_moments = np.zeros((T_MAX, W_EMP_MOMENTS_COL))
+  divorce_moments = np.zeros((T_MAX, W_EMP_MOMENTS_COL))
+  fertility_moments = np.zeros((T_MAX, W_EMP_MOMENTS_COL))
+  wage_moments_wife = np.zeros((WAGE_MOM_ROW, W_EMP_MOMENTS_COL))
+  wage_moments_husband = np.zeros((WAGE_MOM_ROW, H_EMP_MOMENTS_COL))
+  general_moments = np.zeros((GEN_MOM_ROW, W_SCHOOL_SIZE))
 
 
 class ActualMoments:
@@ -118,55 +124,55 @@ class ActualMoments:
 
 
 class Moments:
-  bp_initial_dist = np.zeros(10)
-  bp_dist = np.zeros(10)
-  cs_dist = np.zeros(10)
-  emp_total = np.zeros((c.T_MAX, c.SCHOOL_SIZE))      # employment
-  count_emp_total = np.zeros((c.T_MAX, c.SCHOOL_SIZE))
-  emp_m = np.zeros((c.T_MAX, c.SCHOOL_SIZE))          # employment married
-  emp_um = np.zeros((c.T_MAX, c.SCHOOL_SIZE))         # employment unmarried
-  emp_m_up = Accumulator(c.SCHOOL_SIZE)             # employment unmarried up
-  emp_m_down = Accumulator(c.SCHOOL_SIZE)           # employment unmarried down
-  emp_m_eq = Accumulator(c.SCHOOL_SIZE)             # employment unmarried equal
-  divorce = np.zeros((c.T_MAX, c.SCHOOL_SIZE))
-  just_found_job_m = np.zeros(c.SCHOOL_SIZE)        # transition matrix - unemployment to employment (married)
-  just_got_fired_m = np.zeros(c.SCHOOL_SIZE)        # transition matrix - employment to unemployment (married)
-  just_found_job_um = np.zeros(c.SCHOOL_SIZE)       # transition matrix - unemployment to employment (unmarried)
-  just_found_job_mc = np.zeros(c.SCHOOL_SIZE)       # transition matrix - unemployment to employment (married+kids)
-  just_got_fired_um = np.zeros(c.SCHOOL_SIZE)       # transition matrix - unemployment to employment (married+kids)
-  just_got_fired_mc = np.zeros(c.SCHOOL_SIZE)       # transition matrix - employment to unemployment (married+kids)
-  count_just_got_fired_m = np.zeros(c.SCHOOL_SIZE)
-  count_just_found_job_m = np.zeros(c.SCHOOL_SIZE)
-  count_just_got_fired_um = np.zeros(c.SCHOOL_SIZE)
-  count_just_found_job_um = np.zeros(c.SCHOOL_SIZE)
-  count_just_got_fired_mc = np.zeros(c.SCHOOL_SIZE)
-  count_just_found_job_mc = np.zeros(c.SCHOOL_SIZE)
-  wages_m_h = Accumulator(c.T_MAX, c.SCHOOL_SIZE)   # married men wages - 0 until 20+27 years of exp - 36-c.W_SCHOOL_SIZE7 will be ignored in moments
-  wages_w = Accumulator(c.T_MAX, c.SCHOOL_SIZE)     # woman wages if employed
-  wages_m_w_up = Accumulator(c.SCHOOL_SIZE)            # married up women wages if employed
-  wages_m_w_down = Accumulator(c.SCHOOL_SIZE)          # married down women wages if employed
-  wages_m_w_eq = Accumulator(c.SCHOOL_SIZE)            # married equal women wages if employed
-  wages_um_w = Accumulator(c.SCHOOL_SIZE)              # unmarried women wages if employed
-  married = np.zeros((c.T_MAX, c.SCHOOL_SIZE))      # fertility and marriage rate moments   % married yes/no
-  just_married = np.zeros(c.SCHOOL_SIZE)            # for transition matrix from single to married
-  just_divorced = np.zeros(c.SCHOOL_SIZE)           # for transition matrix from married to divorce
-  age_at_first_marriage = Accumulator(c.SCHOOL_SIZE)   # age at first marriage
-  newborn_um = Accumulator((c.T_MAX, c.SCHOOL_SIZE))              # newborn in period t - for probability and distribution
-  newborn_m = Accumulator((c.T_MAX, c.SCHOOL_SIZE))               # newborn in period t - for probability and distribution
-  newborn_all = Accumulator((c.T_MAX, c.SCHOOL_SIZE))    # newborn in period t - for probability and distribution
-  duration_of_first_marriage = Accumulator(c.W_SCHOOL_SIZE)   # duration of marriage if divorce or c.W_SCHOOL_SIZEc.SCHOOL_SIZE-age of marriage if still married at 45
-  assortative_mating_hist  = np.zeros((c.SCHOOL_SIZE, c.W_SCHOOL_SIZE))    # husband education by wife education
-  assortative_mating_count = np.zeros(c.SCHOOL_SIZE)
-  count_just_married = np.zeros(c.SCHOOL_SIZE)
-  count_just_divorced = np.zeros(c.SCHOOL_SIZE)
-  n_kids_arr  = Accumulator(c.SCHOOL_SIZE)   # # of children by school group
+  bp_initial_dist = np.zeros(CS_SIZE)
+  bp_dist = np.zeros(CS_SIZE)
+  cs_dist = np.zeros(CS_SIZE)
+  emp_total = np.zeros((T_MAX, SCHOOL_SIZE))      # employment
+  count_emp_total = np.zeros((T_MAX, SCHOOL_SIZE))
+  emp_m = np.zeros((T_MAX, SCHOOL_SIZE))          # employment married
+  emp_um = np.zeros((T_MAX, SCHOOL_SIZE))         # employment unmarried
+  emp_m_up = Accumulator(SCHOOL_SIZE)             # employment unmarried up
+  emp_m_down = Accumulator(SCHOOL_SIZE)           # employment unmarried down
+  emp_m_eq = Accumulator(SCHOOL_SIZE)             # employment unmarried equal
+  divorce = np.zeros((T_MAX, SCHOOL_SIZE))
+  just_found_job_m = np.zeros(SCHOOL_SIZE)        # transition matrix - unemployment to employment (married)
+  just_got_fired_m = np.zeros(SCHOOL_SIZE)        # transition matrix - employment to unemployment (married)
+  just_found_job_um = np.zeros(SCHOOL_SIZE)       # transition matrix - unemployment to employment (unmarried)
+  just_found_job_mc = np.zeros(SCHOOL_SIZE)       # transition matrix - unemployment to employment (married+kids)
+  just_got_fired_um = np.zeros(SCHOOL_SIZE)       # transition matrix - unemployment to employment (married+kids)
+  just_got_fired_mc = np.zeros(SCHOOL_SIZE)       # transition matrix - employment to unemployment (married+kids)
+  count_just_got_fired_m = np.zeros(SCHOOL_SIZE)
+  count_just_found_job_m = np.zeros(SCHOOL_SIZE)
+  count_just_got_fired_um = np.zeros(SCHOOL_SIZE)
+  count_just_found_job_um = np.zeros(SCHOOL_SIZE)
+  count_just_got_fired_mc = np.zeros(SCHOOL_SIZE)
+  count_just_found_job_mc = np.zeros(SCHOOL_SIZE)
+  wages_m_h = Accumulator(T_MAX, SCHOOL_SIZE)   # married men wages - 0 until 20+27 years of exp - 36-c.W_SCHOOL_SIZE7 will be ignored in moments
+  wages_w = Accumulator(T_MAX, SCHOOL_SIZE)     # woman wages if employed
+  wages_m_w_up = Accumulator(SCHOOL_SIZE)            # married up women wages if employed
+  wages_m_w_down = Accumulator(SCHOOL_SIZE)          # married down women wages if employed
+  wages_m_w_eq = Accumulator(SCHOOL_SIZE)            # married equal women wages if employed
+  wages_um_w = Accumulator(SCHOOL_SIZE)              # unmarried women wages if employed
+  married = np.zeros((T_MAX, SCHOOL_SIZE))      # fertility and marriage rate moments   % married yes/no
+  just_married = np.zeros(SCHOOL_SIZE)            # for transition matrix from single to married
+  just_divorced = np.zeros(SCHOOL_SIZE)           # for transition matrix from married to divorce
+  age_at_first_marriage = Accumulator(SCHOOL_SIZE)   # age at first marriage
+  newborn_um = Accumulator((T_MAX, SCHOOL_SIZE))              # newborn in period t - for probability and distribution
+  newborn_m = Accumulator((T_MAX, SCHOOL_SIZE))               # newborn in period t - for probability and distribution
+  newborn_all = Accumulator((T_MAX, SCHOOL_SIZE))    # newborn in period t - for probability and distribution
+  duration_of_first_marriage = Accumulator(W_SCHOOL_SIZE)   # duration of marriage if divorce or age of marriage if still married at 45
+  assortative_mating_hist  = np.zeros((SCHOOL_SIZE, W_SCHOOL_SIZE))    # husband education by wife education
+  assortative_mating_count = np.zeros(SCHOOL_SIZE)
+  count_just_married = np.zeros(SCHOOL_SIZE)
+  count_just_divorced = np.zeros(SCHOOL_SIZE)
+  n_kids_arr  = Accumulator(SCHOOL_SIZE)   # # of children by school group
   estimated = EstimatedMoments()
   actual = ActualMoments()
 
   def __init__(self):
-    self.emp_m_kids = [Accumulator(c.SCHOOL_SIZE) for a in range(c.KIDS_SIZE)]
-    self.emp_um_kids = [Accumulator(c.SCHOOL_SIZE) for a in range(c.KIDS_SIZE)]
-    self.up_down_moments = Accumulator(len(UpDownMomentsType), c.SCHOOL_SIZE)
+    self.emp_m_kids = [Accumulator(SCHOOL_SIZE) for a in range(KIDS_SIZE)]
+    self.emp_um_kids = [Accumulator(SCHOOL_SIZE) for a in range(KIDS_SIZE)]
+    self.up_down_moments = Accumulator(len(UpDownMomentsType), SCHOOL_SIZE)
 
 
 def mean(sum_moment, count_moment, school_group, t=None):
@@ -181,7 +187,7 @@ def mean(sum_moment, count_moment, school_group, t=None):
 
 def calculate_moments(m, display_moments):
   # calculate employment moments
-  for t in range(0, c.T_MAX):
+  for t in range(0, T_MAX):
     m.estimated.emp_moments[t][0] = t + 18
     m.estimated.emp_moments_m[t][0] = t + 18
     m.estimated.emp_moments_um[t][0] = t + 18
@@ -211,9 +217,10 @@ def calculate_moments(m, display_moments):
     # calculate general moments
     # assortative mating
     row = 0
+    # TODO: replace 4 and 5 with const parameters
     for HS in range(0, 5):  # this loop goes from 1 to 5 - SCHOOL_H_VALUES
       count = m.assortative_mating_count[HS]
-      for WS in range(0, 4):  # tis loop goes from 1 to 4 - SCHOOL_W_VALUES
+      for WS in range(0, 4):  # this loop goes from 1 to 4 - SCHOOL_W_VALUES
         if count == 0:
           m.estimated.general_moments[row][WS] = 0.0
         else:
@@ -252,7 +259,7 @@ def calculate_moments(m, display_moments):
       m.estimated.general_moments[row][WS - 1] = m.emp_m_down.mean(WS)
     row += 1
     # employment by children: married with 0 - 4+ kids, unmarried with kids, unmarried with no kids
-    for kids_n in range(0, c.KIDS_SIZE):
+    for kids_n in range(0, KIDS_SIZE):
       for WS in range(1, 5):  # SCHOOL_W_VALUES
         m.estimated.general_moments[row][WS - 1] = m.emp_m_kids[kids_n].mean(WS)
       row += 1
@@ -318,7 +325,8 @@ def calculate_moments(m, display_moments):
 
     print("\nUp/Down Moments")
     headers = ["Moment Name", "HSD", "HSG", "SC", "CG", "PC"]
-    table = tabulate(np.concatenate((np.array([up_down_mom_description]).T, m.up_down_moments.mean()), axis=1), headers, floatfmt=".2f", tablefmt="simple")
+    table = tabulate(np.concatenate((np.array([up_down_mom_description]).T, m.up_down_moments.mean()), axis=1),
+                     headers, floatfmt=".2f", tablefmt="simple")
     print(table)
 
     print("\nBargaining Power and Consumption Share Distribution")
@@ -330,30 +338,38 @@ def calculate_moments(m, display_moments):
     print(m.cs_dist / dist_sum)
 
     print("\nWage Moments - Married Men")
-    headers = ["Age", "HSD", "HSG", "SC", "CG", "PC", "HSD", "HSG", "SC", "CG", "PC",]
-    table = tabulate(np.concatenate((m.estimated.wage_moments_husband[:, 0:6], m.actual.wage_moments[:, 5:10]), axis=1), headers, floatfmt=".2f", tablefmt="simple")
+    headers = ["Age", "HSD", "HSG", "SC", "CG", "PC", "HSD", "HSG", "SC", "CG", "PC"]
+    table = tabulate(np.concatenate((m.estimated.wage_moments_husband[:, 0:6], m.actual.wage_moments[:, 5:10]), axis=1),
+                     headers, floatfmt=".2f", tablefmt="simple")
     print(table)
     print("\nWage Moments - Married Women")
-    headers = [ "HSG", "SC", "CG", "PC",  "HSG", "SC", "CG", "PC",]
-    table = tabulate(np.concatenate((m.estimated.wage_moments_wife[:, 0:5], m.actual.wage_moments[:, 1:5]), axis=1), headers, floatfmt=".2f", tablefmt="simple")
+    headers = [ "HSG", "SC", "CG", "PC",  "HSG", "SC", "CG", "PC"]
+    table = tabulate(np.concatenate((m.estimated.wage_moments_wife[:, 0:5], m.actual.wage_moments[:, 1:5]), axis=1),
+                     headers, floatfmt=".2f", tablefmt="simple")
     print(table)
     print("\nEmployment Moments - Total Women")
-    table = tabulate(np.concatenate((m.estimated.emp_moments[:, 0:5], m.actual.emp_moments[:, 1:5]), axis=1), headers, floatfmt=".2f", tablefmt="simple")
+    table = tabulate(np.concatenate((m.estimated.emp_moments[:, 0:5], m.actual.emp_moments[:, 1:5]), axis=1),
+                     headers, floatfmt=".2f", tablefmt="simple")
     print(table)
     print("\nEmployment Moments - Married Women")
-    table = tabulate(np.concatenate((m.estimated.emp_moments_m[:, 0:5], m.actual.emp_moments[:, 5:9]), axis=1), headers, floatfmt=".2f", tablefmt="simple")
+    table = tabulate(np.concatenate((m.estimated.emp_moments_m[:, 0:5], m.actual.emp_moments[:, 5:9]), axis=1),
+                     headers, floatfmt=".2f", tablefmt="simple")
     print(table)
     print("\nEmployment Moments - Unmarried Women")
-    table = tabulate(np.concatenate((m.estimated.emp_moments_um[:, 0:5], m.actual.emp_moments[:, 9:13]), axis=1), headers, floatfmt=".2f", tablefmt="simple")
+    table = tabulate(np.concatenate((m.estimated.emp_moments_um[:, 0:5], m.actual.emp_moments[:, 9:13]), axis=1),
+                     headers, floatfmt=".2f", tablefmt="simple")
     print(table)
     print("\nMarriage Rate")
-    table = tabulate(np.concatenate((m.estimated.marriage_moments[:, 0:5], m.actual.marr_fer_moments[:, 0:5]), axis=1), headers, floatfmt=".2f", tablefmt="simple")
+    table = tabulate(np.concatenate((m.estimated.marriage_moments[:, 0:5], m.actual.marr_fer_moments[:, 0:5]), axis=1),
+                     headers, floatfmt=".2f", tablefmt="simple")
     print(table)
     print("\nFertility Rate")
-    table = tabulate(np.concatenate((m.estimated.fertility_moments[:, 0:5], m.actual.marr_fer_moments[:, 5:9]), axis=1), headers, floatfmt=".2f", tablefmt="simple")
+    table = tabulate(np.concatenate((m.estimated.fertility_moments[:, 0:5], m.actual.marr_fer_moments[:, 5:9]), axis=1),
+                     headers, floatfmt=".2f", tablefmt="simple")
     print(table)
     print("\nDivorce Rate")
-    table = tabulate(np.concatenate((m.estimated.divorce_moments[:, 0:5], m.actual.marr_fer_moments[:, 9:13]), axis=1), headers, floatfmt=".2f", tablefmt="simple")
+    table = tabulate(np.concatenate((m.estimated.divorce_moments[:, 0:5], m.actual.marr_fer_moments[:, 9:13]), axis=1),
+                     headers, floatfmt=".2f", tablefmt="simple")
     print(table)
     gen_mom_description = ["Assortative Mating - HSD",
                              "Assortative Mating - HSG",
@@ -387,8 +403,9 @@ def calculate_moments(m, display_moments):
                              "Birth Rate - Married",
                              "Birth Rate - Unmarried"]
     print("\n")
-    headers = ["Moment Name", "HSG", "SC", "CG", "PC", "HSG", "SC", "CG", "PC", ]
-    table = tabulate(np.concatenate((np.array([gen_mom_description]).T, m.estimated.general_moments, m.actual.general_moments), axis=1), headers, floatfmt=".2f", tablefmt="simple")
+    headers = ["Moment Name", "HSG", "SC", "CG", "PC", "HSG", "SC", "CG", "PC"]
+    table = tabulate(np.concatenate((np.array([gen_mom_description]).T, m.estimated.general_moments, m.actual.general_moments), axis=1),
+                     headers, floatfmt=".2f", tablefmt="simple")
     print(table)
 
   return m

@@ -1,3 +1,3 @@
 from calculate_utility cimport Utility
 
-cdef double nash(Utility utility)
+cpdef double nash(Utility utility)

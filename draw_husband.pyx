@@ -9,6 +9,12 @@ cdef double[:,:] husbands4 = np.loadtxt("husbands_4.out")
 cdef double[:,:] husbands5 = np.loadtxt("husbands_5.out")
 
 cdef class Husband:
+  def get_HS(self):
+    return self.HS
+
+  def increase_AGE(self):
+    self.AGE += 1
+
   def __init__(self):
     self.H_HSD = 0
     self.H_HSG = 0
@@ -43,7 +49,7 @@ cpdef int update_school_and_age(int school_group, int t, Husband husband):   # u
   return 1
 
 
-cpdef update_school_and_age_f(Wife wife, Husband husband):     # used only for forward solution - when wife draw a partner
+def update_school_and_age_f(Wife wife, Husband husband):     # used only for forward solution - when wife draw a partner
   husband.AGE = wife.AGE
   husband.age_index = wife.age_index         # AGE_INDEX_VALUES = [0, 0, 2, 4, 7]
   husband.T_END = wife.T_END                    # AGE_VALUES = [18, 18, 20, 22, 25]
@@ -92,7 +98,7 @@ cpdef update_school(Husband husband):         # this function update education i
 cpdef Husband draw_husband(int t, Wife wife, int forward):
   cdef Husband result = Husband()
   result.ability_hi = np.random.randint(0, 2)                                           # draw ability index
-  result.ability_h_value = c.normal_arr[result.ability_hi] * p.sigma3   # calculate ability value
+  result.ability_h_value = c.normal_vector[result.ability_hi] * p.sigma3   # calculate ability value
 
   cdef double[:,:] tmp_husbands
   if wife.WS == 1:

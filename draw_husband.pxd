@@ -19,9 +19,5 @@ cdef class Husband:
 # return indication (0,1) on whether calculation should stop or continue
 cpdef int update_school_and_age(int school_group, int t, Husband husband)
 
-# update school and age of husband
-# when doing forward simulation
-cpdef update_school_and_age_f(Wife wife, Husband husband)
-
 # draw a husband
 cpdef Husband draw_husband(int t, Wife wife, int forward)

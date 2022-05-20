@@ -22,7 +22,7 @@ def single_men(school_group, t, w_emax, h_emax, w_s_emax, h_s_emax, adjust_bp, v
   iter_count = 0
   for ability_i in range(0, c.ABILITY_SIZE):                           # doe each ability level - open loop of ability
     base_husband.ability_hi = ability_i
-    base_husband.ability_h_value = c.normal_arr[ability_i] * p.sigma3      # husband ability - low, medium, high
+    base_husband.ability_h_value = c.normal_vector[ability_i] * p.sigma3      # husband ability - low, medium, high
     sum = 0.0
     if verbose:
       print(base_husband)

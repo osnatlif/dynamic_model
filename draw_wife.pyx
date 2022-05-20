@@ -10,8 +10,20 @@ cdef class Wife:
   def set_emp_state(self, state):
     self.emp_state = state
 
-  def set_Q(self, Q):
-    self.Q = Q
+  def set_Q(self, Q_INDEX):
+    self.Q_INDEX = Q_INDEX
+    self.Q = c.normal_vector[Q_INDEX] * p.sigma4
+
+  def increase_AGE(self):
+    self.AGE += 1
+
+  def increase_Q(self):
+    self.Q_INDEX += 1
+    self.Q = c.normal_vector[self.Q_INDEX] * p.sigma4
+
+  def decrease_Q(self):
+    self.Q_INDEX += 1
+    self.Q = c.normal_vector[self.Q_INDEX] * p.sigma4
 
   def set_Q_index(self, Q_INDEX):
     self.Q_INDEX = Q_INDEX
@@ -30,6 +42,31 @@ cdef class Wife:
 
   def get_AGE(self):
     return self.AGE
+
+  def get_WS(self):
+    return self.WS
+
+  def get_age_index(self):
+    return self.age_index
+
+  def calculate_lambda(self, n_kids, HS, M):
+    # FERTILITY EXOGENOUS PROCESS - check for another child + update age of children
+    # probability of another child parameters:
+    # c1 previous work state - wife
+    # c2 age wife - HSG
+    # c3 age square  wife - HSG
+    # c4 age wife - SC
+    # c5 age square  wife - SC
+    # c6 age wife - CG
+    # c7 age square  wife - CG
+    # c8 age wife - PC
+    # c9 age square  wife - PC
+    # c10 number of children at household
+    # c11 schooling - husband
+    # c12 unmarried
+    return (p.c1 * self.emp_state + p.c2 * self.HSG * self.AGE + p.c3 * self.HSG * pow(self.AGE, 2) + p.c4 * self.SC * self.AGE +
+            p.c5 * self.SC * pow(self.AGE, 2) + p.c6 * self.CG * self.AGE + p.c7 * self.CG * pow(self.AGE, 2) +
+            p.c8 * self.PC * self.AGE + p.c9 * self.PC * pow(self.AGE, 2) + p.c10 * n_kids + p.c11 * HS * M + p.c12 * M)
 
   def __init__(self):
     # following are indicators for the wife's schooling they have values of 0/1 and only one of them could be 1
@@ -93,15 +130,15 @@ cpdef int update_wife_schooling(int school_group, int t, Wife wife):
 
 cpdef update_ability(int ability, Wife wife):
   wife.ability_wi = ability
-  wife.ability_w_value = c.normal_arr[ability]*p.sigma3
+  wife.ability_w_value = c.normal_vector[ability]*p.sigma3
 
 
 cpdef Wife draw_wife(int t, int age_index, int HS):
   cdef Wife result = Wife()
   result.Q_INDEX = np.random.randint(0, 2)
-  result.Q = c.normal_arr[result.Q_INDEX]*p.sigma4
+  result.Q = c.normal_vector[result.Q_INDEX]*p.sigma4
   result.ability_wi = np.random.randint(0, 2)
-  result.ability_w_value = c.normal_arr[result.ability_wi] * p.sigma3
+  result.ability_w_value = c.normal_vector[result.ability_wi] * p.sigma3
   cdef double[:] wives_arr = wives[t+age_index]
   cdef double prob = np.random.uniform(0, 1)
 

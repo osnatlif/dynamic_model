@@ -23,7 +23,7 @@ def single_women(school_group, t, w_m_emax, h_m_emax, w_s_emax, h_s_emax, adjust
         base_wife.WE = c.exp_vector[w_exp_i]
         for ability_i in range(0, c.ABILITY_SIZE):  # for each ability level: low, medium, high - open loop of ability
             base_wife.ability_wi = ability_i
-            base_wife.ability_w_value = c.normal_arr[ability_i] * p.sigma3  # wife ability - low, medium, high
+            base_wife.ability_w_value = c.normal_vector[ability_i] * p.sigma3  # wife ability - low, medium, high
             for kids in range(0, 4):      # for each number of kids: 0, 1, 2,  - open loop of kids
                 for prev_emp_state in range(0, 2):       # two options: employed and unemployed
                     base_wife.emp_state = prev_emp_state
