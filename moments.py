@@ -160,8 +160,8 @@ class Moments:
   newborn_um = Accumulator((T_MAX, SCHOOL_SIZE))              # newborn in period t - for probability and distribution
   newborn_m = Accumulator((T_MAX, SCHOOL_SIZE))               # newborn in period t - for probability and distribution
   newborn_all = Accumulator((T_MAX, SCHOOL_SIZE))    # newborn in period t - for probability and distribution
-  duration_of_first_marriage = Accumulator(W_SCHOOL_SIZE)   # duration of marriage if divorce or age of marriage if still married at 45
-  assortative_mating_hist  = np.zeros((SCHOOL_SIZE, W_SCHOOL_SIZE))    # husband education by wife education
+  duration_of_first_marriage = Accumulator(SCHOOL_SIZE)   # duration of marriage if divorce or age of marriage if still married at 45
+  assortative_mating_hist  = np.zeros((SCHOOL_SIZE, SCHOOL_SIZE))    # husband education by wife education
   assortative_mating_count = np.zeros(SCHOOL_SIZE)
   count_just_married = np.zeros(SCHOOL_SIZE)
   count_just_divorced = np.zeros(SCHOOL_SIZE)
@@ -194,8 +194,8 @@ def calculate_moments(m, display_moments):
     m.estimated.marriage_moments[t][0] = t + 18
     m.estimated.divorce_moments[t][0] = t + 18
     m.estimated.fertility_moments[t][0] = t + 18
-    m.estimated.wage_moments_wife[t][0] = t + 18
-    m.estimated.wage_moments_husband[t][0] = t + 18
+    m.estimated.wage_moments_wife[t][0] = t
+    m.estimated.wage_moments_husband[t][0] = t
     for school_group in range(1, 5):  # this loop goes from 1 to 4 - SCHOOL_W_VALUES
       # calculate employment estimated moments: total women employment, married women's employment and unmarried women's employment
       m.estimated.emp_moments[t][school_group] = mean(m.emp_total, m.count_emp_total, school_group, t)
@@ -210,10 +210,12 @@ def calculate_moments(m, display_moments):
       m.estimated.fertility_moments[t][school_group] = m.newborn_all.mean(t, school_group)
       m.estimated.divorce_moments[t][school_group] = m.divorce[t][school_group] / c.DRAW_F
       # calculate women's wage moments
-      m.estimated.wage_moments_wife[t][school_group] = m.wages_m_h.mean(t, school_group)
+      m.estimated.wage_moments_wife[t][school_group] = m.wages_w.mean(t, school_group)
     for HS in range(1, 6):  # this loop goes from 1 to 5 - SCHOOL_H_VALUES
-        m.estimated.wage_moments_husband[t][HS] = m.wages_w.mean(t, HS-1)
-
+        m.estimated.wage_moments_husband[t][HS] = m.wages_m_h.mean(t, HS-1)
+        #print(m.wages_m_h.mean(t, HS-1))
+        #print(t)
+        #print(HS-1)
     # calculate general moments
     # assortative mating
     row = 0
@@ -329,25 +331,28 @@ def calculate_moments(m, display_moments):
                      headers, floatfmt=".2f", tablefmt="simple")
     print(table)
 
-    print("\nBargaining Power and Consumption Share Distribution")
+    print("\nInitial Bargaining Power ")
     dist_sum = np.sum(m.bp_initial_dist)
     print(m.bp_initial_dist / dist_sum)
+    print("\nBargaining Power ")
     dist_sum = np.sum(m.bp_dist)
     print(m.bp_dist / dist_sum)
+    print("\nConsumption Share Distribution")
     dist_sum = np.sum(m.cs_dist)
     print(m.cs_dist / dist_sum)
 
     print("\nWage Moments - Married Men")
-    headers = ["Age", "HSD", "HSG", "SC", "CG", "PC", "HSD", "HSG", "SC", "CG", "PC"]
+    headers = ["Experience", "HSD", "HSG", "SC", "CG", "PC", "HSD", "HSG", "SC", "CG", "PC"]
     table = tabulate(np.concatenate((m.estimated.wage_moments_husband[:, 0:6], m.actual.wage_moments[:, 5:10]), axis=1),
                      headers, floatfmt=".2f", tablefmt="simple")
     print(table)
     print("\nWage Moments - Married Women")
-    headers = [ "HSG", "SC", "CG", "PC",  "HSG", "SC", "CG", "PC"]
+    headers = ["Experience", "HSG", "SC", "CG", "PC",  "HSG", "SC", "CG", "PC"]
     table = tabulate(np.concatenate((m.estimated.wage_moments_wife[:, 0:5], m.actual.wage_moments[:, 1:5]), axis=1),
                      headers, floatfmt=".2f", tablefmt="simple")
     print(table)
     print("\nEmployment Moments - Total Women")
+    headers = ["Age", "HSG", "SC", "CG", "PC",  "HSG", "SC", "CG", "PC"]
     table = tabulate(np.concatenate((m.estimated.emp_moments[:, 0:5], m.actual.emp_moments[:, 1:5]), axis=1),
                      headers, floatfmt=".2f", tablefmt="simple")
     print(table)

@@ -13,6 +13,11 @@ cpdef double calculate_wage_h(Husband husband, double epsilon):
         + p.beta30_h*husband.H_HSD + p.beta31_h*husband.H_HSG + p.beta32_h*husband.H_SC + p.beta33_h*husband.H_CG + p.beta34_h*husband.H_PC)
     tmp2 = epsilon * p.sigma_h_wage
     wage = cexp(tmp1 + tmp2)
+    # print(wage)
+    # :wprint(tmp1)
+    #print(tmp2)
+    #print(husband.ability_h_value)
+    #print(husband)
     return wage
 
 

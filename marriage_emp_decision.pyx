@@ -5,7 +5,7 @@ from draw_wife cimport Wife
 
 
 cpdef int wife_emp_decision(Utility utility):       # single women only chooses employment (if she got an offer)
-  if utility.U_W_S[c.UNEMP] > utility.U_W_S[c.EMP]:
+  if utility.wife_s[c.UNEMP] > utility.wife_s[c.EMP]:
     return c.UNEMP
   else:
     return c.EMP

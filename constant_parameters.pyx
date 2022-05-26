@@ -54,7 +54,7 @@ cdef int MAX_FERTILITY_AGE = 40
 
 
 # constant values for the forward simulation
-DRAW_F = 5000
+DRAW_F = 100
 UNEMP_WOMEN_RATIO = 0.45
 MAX_NUM_KIDS = KIDS_SIZE - 1
 

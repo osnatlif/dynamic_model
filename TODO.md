@@ -1,6 +1,6 @@
 ## priority 1
 - [ ] remove the Utility class and return multiple values instead
-- [ ] remove the marriage emp decision class and return multiple values instead
+- [x] remove the marriage emp decision class and return multiple values instead
 - [ ] add specific imports so that functions does not need to be prefixed with module name
 - [ ] remove Acccumulator class and "mean()" function
 

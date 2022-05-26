@@ -3,14 +3,20 @@ cimport constant_parameters as c
 from draw_wife cimport Wife
 import numpy as np
 
-cdef double[:,:] husbands2 = np.loadtxt("husbands_2.out")
-cdef double[:,:] husbands3 = np.loadtxt("husbands_3.out")
-cdef double[:,:] husbands4 = np.loadtxt("husbands_4.out")
-cdef double[:,:] husbands5 = np.loadtxt("husbands_5.out")
+cdef double[:,:] husbands2 = np.loadtxt("husbands_all_new.out")
+cdef double[:,:] husbands3 = np.loadtxt("husbands_all_new.out")
+cdef double[:,:] husbands4 = np.loadtxt("husbands_all_new.out")
+cdef double[:,:] husbands5 = np.loadtxt("husbands_all_new.out")
 
 cdef class Husband:
   def get_HS(self):
     return self.HS
+
+  def get_HE(self):
+    return self.HE
+
+  def get_AGE(self):
+    return self.AGE
 
   def increase_AGE(self):
     self.AGE += 1
@@ -113,15 +119,16 @@ cpdef Husband draw_husband(int t, Wife wife, int forward):
   cdef double[:] husband_arr = tmp_husbands[t+wife.age_index]      # t+wife.age_index = wife's age which is identical to husband's age
   cdef double prob = np.random.uniform(0, 1)
   # find the first index in the husband array that is not less than the probability
-  # note: first column of the husband matrix is skipped since it is just an index, hence the: [2:]
+  # note: first column of the husband matrix is skipped since it is just an index, hence the: [1:]
   cdef int h_index = 0
   cdef double value
-  for value in husband_arr:
+  for value in husband_arr[1:]:
     if value >= prob:
       break
     h_index +=1
   # husband schooling is in the range: 0-4
-  result.HS = int(h_index/5)
+  result.HS = int(h_index)
+  print(result.HS)
   assert(result.HS in range(0, 5))
   if forward:
     update_school_and_age_f(wife, result)

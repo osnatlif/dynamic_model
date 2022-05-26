@@ -16,13 +16,15 @@ cdef class Wife:
 
   def increase_AGE(self):
     self.AGE += 1
+  def get_AGE(self):
+    return self.AGE
 
   def increase_Q(self):
     self.Q_INDEX += 1
     self.Q = c.normal_vector[self.Q_INDEX] * p.sigma4
 
   def decrease_Q(self):
-    self.Q_INDEX += 1
+    self.Q_INDEX -= 1
     self.Q = c.normal_vector[self.Q_INDEX] * p.sigma4
 
   def set_Q_index(self, Q_INDEX):
@@ -42,6 +44,8 @@ cdef class Wife:
 
   def get_AGE(self):
     return self.AGE
+  def get_WE(self):
+    return self.WE
 
   def get_WS(self):
     return self.WS

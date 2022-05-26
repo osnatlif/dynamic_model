@@ -26,4 +26,5 @@ cpdef double nash(Utility utility):
   if max_nash_value == c.MINIMUM_UTILITY:
     return c.NO_BP
 
-  return c.bp_vector[max_nash_index % c.CS_SIZE]
+  # return c.bp_vector[max_nash_index % c.CS_SIZE]
+  return 0.5

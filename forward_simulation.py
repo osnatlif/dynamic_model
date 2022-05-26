@@ -20,12 +20,13 @@ INITIAL_BP = c.F_INITIAL_BP
 NO_BP = c.F_NO_BP
 T_MAX = c.F_T_MAX
 MAX_FERTILITY_AGE = c.F_MAX_FERTILITY_AGE
+CS_SIZE = c.F_CS_SIZE
 
 
 def forward_simulation(w_m_emax, h_m_emax, w_s_emax, h_s_emax, adjust_bp, verbose, display_moments):
   m = Moments()
   # school_group 0 is only for calculating the emax if single men - not used here
-  for school_group in range(1, SCHOOL_SIZE):       # SCHOOL_W_VALUES
+  for school_group in range(1, SCHOOL_SIZE):       # SCHOOL_W_VALUES - 1, 2, 3 , 4
     for draw_f in range(0, c.DRAW_F):   # start the forward loop
       husband = draw_husband.Husband()  # declare husband structure
       wife = draw_wife.Wife()           # declare wife structure
@@ -77,9 +78,9 @@ def forward_simulation(w_m_emax, h_m_emax, w_s_emax, h_s_emax, adjust_bp, verbos
           if np.random.uniform(0, 1) < choose_husband_p:
             choose_husband = True
             husband = draw_husband.draw_husband(t, wife, True)
-            wife.set_Q(np.random.random_integers(0, 2))  # draw wife's quality
-            draw_husband.update_school_and_age_f(wife, husband)
-            #assert(husband.AGE == wife.AGE)
+            #print(husband)
+            wife.set_Q(np.random.random_integers(0, 2))  # draw wife's match quality
+            assert(husband.get_AGE() == wife.get_AGE())
             if verbose:
               print("new potential husband")
 
@@ -96,7 +97,6 @@ def forward_simulation(w_m_emax, h_m_emax, w_s_emax, h_s_emax, adjust_bp, verbos
           # Nash bargaining at first period of marriage
           bp = nash.nash(utility)
         if bp != NO_BP:
-          print(bp)
           m.bp_initial_dist[int(bp*10)] = m.bp_initial_dist[int(bp*10)] + 1
         else:
           choose_husband = False
@@ -114,9 +114,8 @@ def forward_simulation(w_m_emax, h_m_emax, w_s_emax, h_s_emax, adjust_bp, verbos
           utility = calculate_utility(w_m_emax, h_m_emax, w_s_emax, h_s_emax, n_kids, wage_h, wage_w,
               True, M, wife, husband, t, bp, is_single_men)
           M, max_weighted_utility_index, _, _, _ = marriage_emp_decision(utility, bp, wife, husband, adjust_bp)
-        else:
-          # TODO: uncomment this assertion
-          #assert(wage_h == 0.0)
+        else:   # unmarried and no potential husband
+          # assert(wage_h == 0.0)
           utility = calculate_utility(w_m_emax, h_m_emax, w_s_emax, h_s_emax, n_kids, wage_h, wage_w,
               False, M, wife, husband, t, bp, is_single_men)
           wife.set_emp_state(wife_emp_decision(utility))
@@ -124,15 +123,15 @@ def forward_simulation(w_m_emax, h_m_emax, w_s_emax, h_s_emax, adjust_bp, verbos
         w_emp_state = wife.get_emp_state()
         age_index = wife.get_age_index()
         m.emp_total[t+age_index][school_group] += w_emp_state
+        m.count_emp_total[t + age_index][school_group] += 1
         if M == MARRIED:
           m.emp_m[t+age_index][school_group] += w_emp_state
         if M == UNMARRIED:
           m.emp_um[t+age_index][school_group] += w_emp_state
-          m.count_emp_total[t+age_index][school_group] += 1
         if bp != NO_BP:
           m.bp_dist[int(bp*10)] += 1
         if M == MARRIED:
-          m.cs_dist[max_weighted_utility_index] += 1
+          m.cs_dist[max_weighted_utility_index%CS_SIZE] += 1
         c_lambda = wife.calculate_lambda(n_kids, husband.get_HS(), M)
         child_prob = NormalDist(mu=0, sigma=1).pdf(c_lambda)
         if np.random.uniform(0, 1) < child_prob and wife.get_AGE() < MAX_FERTILITY_AGE:
@@ -169,9 +168,9 @@ def forward_simulation(w_m_emax, h_m_emax, w_s_emax, h_s_emax, adjust_bp, verbos
             wife.decrease_Q()
           elif p.MATCH_Q_DECREASE < match_quality_change_prob < p.MATCH_Q_DECREASE + p.MATCH_Q_INCREASE and wife.Q_INDEX < 2:
             # FIXME: should be "increase"?
-            wife.decrease_Q()
+            wife.increase_Q()
         if M == MARRIED:          # MARRIED WOMEN EMPLOYMENT BY KIDS INDIVIDUAL MOMENTS
-          m.emp_m_kids[n_kids].accumulate(WS, w_emp_state)  # employment married no kids
+          m.emp_m_kids[n_kids].accumulate(WS, w_emp_state)  # employment married by kids
         else:
           # UNMARRIED WOMEN EMPLOYMENT BY KIDS INDIVIDUAL MOMENTS
           if n_kids == 0:
@@ -217,12 +216,12 @@ def forward_simulation(w_m_emax, h_m_emax, w_s_emax, h_s_emax, adjust_bp, verbos
 
         # women wages if employed by experience
         if w_emp_state == EMP and wage_w > 0.0:
-          m.wages_w.accumulate(wage_w, wife.WE, school_group)
+          m.wages_w.accumulate(wage_w, wife.get_WE(), school_group)
 
         if M == MARRIED:
           assert(wage_h > 0.0)   # husband always works
-          m.wages_m_h.accumulate(wage_h, husband.HE, husband.HS) # husband always works
-          if WS > husband.HS:
+          m.wages_m_h.accumulate(wage_h, husband.get_HE(), husband.get_HS()) # husband always works
+          if WS > husband.get_HS():
             # women married down, men married up
             m.emp_m_down.accumulate(WS, w_emp_state)
             # TODO: how to use wage_moments ?
@@ -230,53 +229,53 @@ def forward_simulation(w_m_emax, h_m_emax, w_s_emax, h_s_emax, adjust_bp, verbos
             #  m.up_down_moments.accumulate(UpDownMomentsType.emp_m_down_above, WS, w_emp_state)
             #else:
             #  m.up_down_moments.accumulate(UpDownMomentsType.emp_m_down_below, WS, w_emp_state)
-            m.up_down_moments.accumulate(UpDownMomentsType.wages_m_h_up, husband.HS, wage_h)   # married up men wages
-            if prev_M == UNMARRIED:
+            #m.up_down_moments.accumulate(UpDownMomentsType.wages_m_h_up, husband.HS, wage_h)   # married up men wages
+            #if prev_M == UNMARRIED:
               # first period of marriage
-              m.up_down_moments.accumulate(UpDownMomentsType.ability_h_up, husband.HS, husband.ability_h_value)
-              m.up_down_moments.accumulate(UpDownMomentsType.ability_w_down, WS, wife.ability_w_value)
-              m.up_down_moments.accumulate(UpDownMomentsType.match_w_down, WS, wife.get_Q())
-          elif WS < husband.HS:
+              #m.up_down_moments.accumulate(UpDownMomentsType.ability_h_up, husband.HS, husband.ability_h_value)
+              #m.up_down_moments.accumulate(UpDownMomentsType.ability_w_down, WS, wife.ability_w_value)
+              #m.up_down_moments.accumulate(UpDownMomentsType.match_w_down, WS, wife.get_Q())
+          #elif WS < husband.HS:
             # women married up, men married down
-            m.emp_m_up.accumulate(WS, w_emp_state)
+            #m.emp_m_up.accumulate(WS, w_emp_state)
             # TODO: how to use wage_moments ?
             #if husband.HE < 37 and wage_h > m.wage_moments[husband.HE][SCHOOL_SIZE+husband.HS]:
             #  m.up_down_moments.accumulate(UpDownMomentsType.emp_m_up_above, WS, w_emp_state)
             #else:
             #  m.up_down_moments.accumulate(UpDownMomentsType.emp_m_up_below, WS, w_emp_state)
-            m.up_down_moments.accumulate(UpDownMomentsType.wages_m_h_down, husband.HS, wage_h)    # married down men wages
-            if prev_M == UNMARRIED:
+            #m.up_down_moments.accumulate(UpDownMomentsType.wages_m_h_down, husband.HS, wage_h)    # married down men wages
+            #if prev_M == UNMARRIED:
               # first period of marriage
-              m.up_down_moments.accumulate(UpDownMomentsType.ability_h_down, husband.HS, husband.ability_h_value)
-              m.up_down_moments.accumulate(UpDownMomentsType.ability_w_up, WS, wife.ability_w_value)
-              m.up_down_moments.accumulate(UpDownMomentsType.match_w_up, WS, wife.get_Q())
+              #m.up_down_moments.accumulate(UpDownMomentsType.ability_h_down, husband.HS, husband.ability_h_value)
+              #m.up_down_moments.accumulate(UpDownMomentsType.ability_w_up, WS, wife.ability_w_value)
+              #m.up_down_moments.accumulate(UpDownMomentsType.match_w_up, WS, wife.get_Q())
           else:
             # married equal
-            m.up_down_moments.accumulate(UpDownMomentsType.wages_m_h_eq, husband.HS, wage_h)  # married equal men wages
+            #m.up_down_moments.accumulate(UpDownMomentsType.wages_m_h_eq, husband.HS, wage_h)  # married equal men wages
             m.emp_m_eq.accumulate(WS, w_emp_state)  #employment married equal women
             # TODO: how to use wage_moments ?
             #if husband.HE < 37 and wage_h > m.wage_moments[husband.HE][SCHOOL_SIZE+husband.HS+husband.HS]:
             #  m.up_down_moments.accumulate(UpDownMomentsType.emp_m_eq_above, WS,w_emp_state)
             #else:
             #  m.up_down_moments.accumulate(UpDownMomentsType.emp_m_eq_below, WS, w_emp_state)
-            if prev_M == UNMARRIED:
+            #if prev_M == UNMARRIED:
               # first period of marriage
-              m.up_down_moments.accumulate(UpDownMomentsType.ability_h_eq, husband.HS, husband.ability_h_value)
-              m.up_down_moments.accumulate(UpDownMomentsType.ability_w_eq, WS, wife.ability_w_value)
-              m.up_down_moments.accumulate(UpDownMomentsType.match_w_eq, WS, wife.get_Q())
+              #m.up_down_moments.accumulate(UpDownMomentsType.ability_h_eq, husband.HS, husband.ability_h_value)
+              #m.up_down_moments.accumulate(UpDownMomentsType.ability_w_eq, WS, wife.ability_w_value)
+              #m.up_down_moments.accumulate(UpDownMomentsType.match_w_eq, WS, wife.get_Q())
 
         if w_emp_state == EMP:
           # wife employed - emp_state is actually current state at this point
           if M == MARRIED:
-            m.estimated.wages_m_w.accumulate(wife.WE, school_group, wage_w)  # married women wages if employed
-            if WS < husband.HS:
-              m.wages_m_w_up.accumulate(WS, wage_w)                   # married up women wages if employed
-            elif WS > husband.HS:
-              m.wages_m_w_down.accumulate(WS, wage_w)                 # married down women wages if employed
+            m.wages_w.accumulate(wage_w, wife.get_WE(), school_group)  # married women wages if employed
+            if WS < husband.get_HS():
+              m.wages_m_w_up.accumulate(wage_w, WS)                   # married up women wages if employed
+            elif WS > husband.get_HS():
+              m.wages_m_w_down.accumulate(wage_w, WS)                 # married down women wages if employed
             else:
-              m.wages_m_w_eq.accumulate(WS, wage_w)                   # married equal women wages if employed
+              m.wages_m_w_eq.accumulate(wage_w, WS)                   # married equal women wages if employed
           else:
-            m.wages_um_w.accumulate(WS, wage_w)                         # unmarried women wages if employed
+            m.wages_um_w.accumulate(wage_w, WS)                         # unmarried women wages if employed
         w_age_index = wife.get_age_index()
         m.married[t+w_age_index][school_group] += M
 
@@ -288,8 +287,8 @@ def forward_simulation(w_m_emax, h_m_emax, w_s_emax, h_s_emax, adjust_bp, verbos
           m.newborn_um.accumulate(t+w_age_index, WS, new_born)
         if wife.get_AGE() == MAX_FERTILITY_AGE - 4:
           m.n_kids_arr.accumulate(WS, n_kids) # # of children by school group
-          m.up_down_moments.accumulate(UpDownMomentsType.n_kids_m_arr, WS, n_kids_m)
-          m.up_down_moments.accumulate(UpDownMomentsType.n_kids_um_arr, WS, n_kids_um)
+          #m.up_down_moments.accumulate(UpDownMomentsType.n_kids_m_arr, WS, n_kids_m)
+          #m.up_down_moments.accumulate(UpDownMomentsType.n_kids_um_arr, WS, n_kids_um)
         # marriage transition matrix
         if M == MARRIED and prev_M == UNMARRIED:
           if verbose:
@@ -304,15 +303,15 @@ def forward_simulation(w_m_emax, h_m_emax, w_s_emax, h_s_emax, adjust_bp, verbos
           m.just_married[school_group] += 1
           m.count_just_married[school_group] += 1
           if first_marriage:
-            m.age_at_first_marriage.accumulate(WS, wife.get_AGE())
+            m.age_at_first_marriage.accumulate(wife.get_AGE(), WS)
             m.assortative_mating_count[school_group] += 1
-            m.assortative_mating_hist[school_group][husband.HS] += 1
+            m.assortative_mating_hist[husband.get_HS()][school_group] += 1
             first_marriage = False
           assert(DIVORCE == 0)
         elif M == UNMARRIED and prev_M == MARRIED:
           if verbose:
             print("decided to get divorced")
-            print("utility:" , utility)
+            print("utility:", utility)
             print(husband)
             print(wife)
             print("kids: ", n_kids)
@@ -323,7 +322,7 @@ def forward_simulation(w_m_emax, h_m_emax, w_s_emax, h_s_emax, adjust_bp, verbos
           m.just_divorced[school_group] += 1
           m.count_just_divorced[school_group] += 1
           if first_divorce:
-            m.duration_of_first_marriage.accumulate(WS, duration - 1) # duration of marriage if divorce
+            m.duration_of_first_marriage.accumulate(duration, WS-1) # duration of marriage if divorce
             first_divorce = False
         elif M == MARRIED and prev_M == MARRIED:
           if verbose:
